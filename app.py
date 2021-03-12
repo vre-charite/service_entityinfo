@@ -7,7 +7,7 @@ import uvicorn
 app = FastAPI(
     title="EntityInfo Service",
     description="EntityInfo",
-    docs_url="/v1/api-docs",
+    docs_url="/v1/api-doc",
     version="0.3.0"
 )
 app.add_middleware(

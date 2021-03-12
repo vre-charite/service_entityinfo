@@ -1,0 +1,118 @@
+2021-03-08 09:55:31 INFO     
+
+2021-03-08 09:55:31 INFO     Preparing testing project-------------------------------------------------------
+2021-03-08 09:55:31 INFO     POST API: http://10.3.7.216:5062/v1/neo4j/nodes/Dataset
+2021-03-08 09:55:31 INFO     POST params: {'name': 'EntityInfoUnitTest', 'path': 'unittest_entity_info', 'code': 'unittest_entity_info', 'description': 'Project created by unit test, will be deleted soon...', 'discoverable': 'true', 'type': 'Usecase', 'tags': ['test']}
+2021-03-08 09:55:32 INFO     RESPONSE DATA: [{"id": 2926, "labels": ["Dataset"], "name": "EntityInfoUnitTest", "time_created": "2021-03-08T14:55:32", "time_lastmodified": "2021-03-08T14:55:32", "path": "unittest_entity_info", "code": "unittest_entity_info", "description": "Project created by unit test, will be deleted soon...", "discoverable": "true", "type": "Usecase", "tags": ["test"]}]
+
+2021-03-08 09:55:32 INFO     RESPONSE STATUS: 200
+2021-03-08 09:55:32 INFO     
+
+2021-03-08 09:55:32 INFO     Creating testing file-----------------------------------------------------------
+2021-03-08 09:55:33 INFO     RESPONSE DATA: {"code":200,"error_msg":"","page":0,"total":1,"num_of_pages":1,"result":{"id":2927,"labels":["File","Greenroom","Raw"],"name":"entity_info_test_1","time_created":"2021-03-08T14:55:33","time_lastmodified":"2021-03-08T14:55:33","file_size":10,"full_path":"/data/vre-storage/unittest_entity_info/raw/entity_info_test_1","generate_id":"","guid":"7fcc1b9a-750b-4829-b2a0-b82847141d18","uploader":"EntityInfoUnittest","process_pipeline":"","operator":"","tags":["unittest"],"global_entity_id":"file_data-54fd6954-801e-11eb-b013-be498ca98c54-1615215332","path":"/data/vre-storage/unittest_entity_info/raw","archived":false}}
+2021-03-08 09:55:33 INFO     RESPONSE STATUS: 200
+2021-03-08 09:55:33 INFO     
+
+2021-03-08 09:55:33 INFO     Creating testing file-----------------------------------------------------------
+2021-03-08 09:55:34 INFO     RESPONSE DATA: {"code":200,"error_msg":"","page":0,"total":1,"num_of_pages":1,"result":{"id":2928,"labels":["File","VRECore","Raw"],"name":"entity_info_test_3","time_created":"2021-03-08T14:55:34","time_lastmodified":"2021-03-08T14:55:34","file_size":10,"full_path":"/vre-data/unittest_entity_info/raw/entity_info_test_3","generate_id":"","guid":"78d9ecd1-bde4-474d-be67-0d1248283d86","uploader":"EntityInfoUnittest","process_pipeline":"","operator":"","tags":["unittest"],"global_entity_id":"file_data-55b8beac-801e-11eb-b013-be498ca98c54-1615215334","path":"/vre-data/unittest_entity_info/raw","archived":false}}
+2021-03-08 09:55:34 INFO     RESPONSE STATUS: 200
+2021-03-08 09:55:34 INFO     
+
+2021-03-08 09:55:34 INFO     Creating testing file-----------------------------------------------------------
+2021-03-08 09:55:35 INFO     RESPONSE DATA: {"code":200,"error_msg":"","page":0,"total":1,"num_of_pages":1,"result":{"id":2929,"labels":["File","Greenroom","Processed"],"name":"entity_info_test_2","time_created":"2021-03-08T14:55:35","time_lastmodified":"2021-03-08T14:55:35","file_size":10,"full_path":"/data/vre-storage/unittest_entity_info/processed/straight_copy/entity_info_test_2","generate_id":"","guid":"24a9c806-4251-4874-82a8-c1f90dd1517b","uploader":"EntityInfoUnittest","process_pipeline":"","operator":"","tags":["unittest"],"global_entity_id":"file_data-564568b6-801e-11eb-8428-be498ca98c54-1615215334","path":"/data/vre-storage/unittest_entity_info/processed/straight_copy","archived":false}}
+2021-03-08 09:55:35 INFO     RESPONSE STATUS: 200
+2021-03-08 09:55:35 INFO     Project ID: 2926
+2021-03-08 09:55:35 INFO     File Info: {'id': 2927, 'labels': ['File', 'Greenroom', 'Raw'], 'name': 'entity_info_test_1', 'time_created': '2021-03-08T14:55:33', 'time_lastmodified': '2021-03-08T14:55:33', 'file_size': 10, 'full_path': '/data/vre-storage/unittest_entity_info/raw/entity_info_test_1', 'generate_id': '', 'guid': '7fcc1b9a-750b-4829-b2a0-b82847141d18', 'uploader': 'EntityInfoUnittest', 'process_pipeline': '', 'operator': '', 'tags': ['unittest'], 'global_entity_id': 'file_data-54fd6954-801e-11eb-b013-be498ca98c54-1615215332', 'path': '/data/vre-storage/unittest_entity_info/raw', 'archived': False}
+2021-03-08 09:55:35 INFO     File Info: {'id': 2928, 'labels': ['File', 'VRECore', 'Raw'], 'name': 'entity_info_test_3', 'time_created': '2021-03-08T14:55:34', 'time_lastmodified': '2021-03-08T14:55:34', 'file_size': 10, 'full_path': '/vre-data/unittest_entity_info/raw/entity_info_test_3', 'generate_id': '', 'guid': '78d9ecd1-bde4-474d-be67-0d1248283d86', 'uploader': 'EntityInfoUnittest', 'process_pipeline': '', 'operator': '', 'tags': ['unittest'], 'global_entity_id': 'file_data-55b8beac-801e-11eb-b013-be498ca98c54-1615215334', 'path': '/vre-data/unittest_entity_info/raw', 'archived': False}
+2021-03-08 09:55:35 INFO     File Info: {'id': 2929, 'labels': ['File', 'Greenroom', 'Processed'], 'name': 'entity_info_test_2', 'time_created': '2021-03-08T14:55:35', 'time_lastmodified': '2021-03-08T14:55:35', 'file_size': 10, 'full_path': '/data/vre-storage/unittest_entity_info/processed/straight_copy/entity_info_test_2', 'generate_id': '', 'guid': '24a9c806-4251-4874-82a8-c1f90dd1517b', 'uploader': 'EntityInfoUnittest', 'process_pipeline': '', 'operator': '', 'tags': ['unittest'], 'global_entity_id': 'file_data-564568b6-801e-11eb-8428-be498ca98c54-1615215334', 'path': '/data/vre-storage/unittest_entity_info/processed/straight_copy', 'archived': False}
+2021-03-08 09:55:35 INFO     
+
+2021-03-08 09:55:35 INFO     ------------------------------01 test get_raw_file------------------------------
+2021-03-08 09:55:37 INFO     <Response [200]>
+2021-03-08 09:55:37 INFO     COMPARING CODE: 200 VS 200
+2021-03-08 09:55:37 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {'id': 2927, 'labels': ['File', 'Greenroom', 'Raw'], 'global_entity_id': 'file_data-54fd6954-801e-11eb-b013-be498ca98c54-1615215332', 'operator': '', 'file_size': 10, 'tags': ['unittest'], 'archived': False, 'path': '/data/vre-storage/unittest_entity_info/raw', 'time_lastmodified': '2021-03-08T14:55:33', 'process_pipeline': '', 'uploader': 'EntityInfoUnittest', 'name': 'entity_info_test_1', 'time_created': '2021-03-08T14:55:33', 'guid': '7fcc1b9a-750b-4829-b2a0-b82847141d18', 'full_path': '/data/vre-storage/unittest_entity_info/raw/entity_info_test_1', 'generate_id': ''}}
+2021-03-08 09:55:37 INFO     COMPARING Type: True VS True
+2021-03-08 09:55:37 INFO     
+
+2021-03-08 09:55:37 INFO     -------------------------02 test get_straight_copy_file-------------------------
+2021-03-08 09:55:37 INFO     <Response [200]>
+2021-03-08 09:55:37 INFO     COMPARING CODE: 200 VS 200
+2021-03-08 09:55:37 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {'id': 2929, 'labels': ['File', 'Greenroom', 'Processed'], 'global_entity_id': 'file_data-564568b6-801e-11eb-8428-be498ca98c54-1615215334', 'operator': '', 'file_size': 10, 'tags': ['unittest'], 'archived': False, 'path': '/data/vre-storage/unittest_entity_info/processed/straight_copy', 'time_lastmodified': '2021-03-08T14:55:35', 'uploader': 'EntityInfoUnittest', 'process_pipeline': '', 'name': 'entity_info_test_2', 'time_created': '2021-03-08T14:55:35', 'guid': '24a9c806-4251-4874-82a8-c1f90dd1517b', 'full_path': '/data/vre-storage/unittest_entity_info/processed/straight_copy/entity_info_test_2', 'generate_id': ''}}
+2021-03-08 09:55:37 INFO     COMPARING Type: True VS True
+2021-03-08 09:55:37 INFO     
+
+2021-03-08 09:55:37 INFO     ---------------------------03 test get_vre_core_file----------------------------
+2021-03-08 09:55:38 INFO     <Response [200]>
+2021-03-08 09:55:38 INFO     COMPARING CODE: 200 VS 200
+2021-03-08 09:55:38 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {'id': 2928, 'labels': ['File', 'VRECore', 'Raw'], 'global_entity_id': 'file_data-55b8beac-801e-11eb-b013-be498ca98c54-1615215334', 'operator': '', 'file_size': 10, 'tags': ['unittest'], 'archived': False, 'path': '/vre-data/unittest_entity_info/raw', 'time_lastmodified': '2021-03-08T14:55:34', 'process_pipeline': '', 'uploader': 'EntityInfoUnittest', 'name': 'entity_info_test_3', 'time_created': '2021-03-08T14:55:34', 'guid': '78d9ecd1-bde4-474d-be67-0d1248283d86', 'full_path': '/vre-data/unittest_entity_info/raw/entity_info_test_3', 'generate_id': ''}}
+2021-03-08 09:55:38 INFO     COMPARING Type: True VS True
+2021-03-08 09:55:38 INFO     
+
+2021-03-08 09:55:38 INFO     -----------------------------04 test non_exist_file-----------------------------
+2021-03-08 09:55:38 INFO     <Response [404]>
+2021-03-08 09:55:38 INFO     COMPARING CODE: 404 VS 404
+2021-03-08 09:55:38 INFO     {'code': 404, 'error_msg': '', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': 'File not found'}
+2021-03-08 09:55:38 INFO     COMPARING: File not found VS 'File not found'
+2021-03-08 09:55:38 INFO     
+
+2021-03-08 09:55:38 INFO     ------------------------05 test get_file_with_wrong_type------------------------
+2021-03-08 09:55:38 INFO     <Response [400]>
+2021-03-08 09:55:38 INFO     COMPARING CODE: 400 VS 400
+2021-03-08 09:55:38 INFO     {'code': 400, 'error_msg': 'Invalid type faketype', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {}}
+2021-03-08 09:55:38 INFO     COMPARING error_msg: Invalid type faketype VS Invalid type faketype
+2021-03-08 09:55:38 INFO     COMPARING result: {} VS 
+2021-03-08 09:55:38 INFO     
+
+2021-03-08 09:55:38 INFO     ------------------------06 test get_file_with_wrong_zone------------------------
+2021-03-08 09:55:38 INFO     <Response [400]>
+2021-03-08 09:55:38 INFO     COMPARING CODE: 400 VS 400
+2021-03-08 09:55:38 INFO     {'code': 400, 'error_msg': 'Invalid zone', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {}}
+2021-03-08 09:55:38 INFO     COMPARING error_msg: Invalid zone VS Invalid zone
+2021-03-08 09:55:38 INFO     COMPARING result: {} VS 
+2021-03-08 09:55:38 INFO     
+
+2021-03-08 09:55:38 INFO     START TEAR DOWN PROCESS
+2021-03-08 09:55:38 INFO     File ID: [2927, 2928, 2929]
+2021-03-08 09:55:38 INFO     File GUID: ['7fcc1b9a-750b-4829-b2a0-b82847141d18', '78d9ecd1-bde4-474d-be67-0d1248283d86', '24a9c806-4251-4874-82a8-c1f90dd1517b']
+2021-03-08 09:55:38 INFO     
+
+2021-03-08 09:55:38 INFO     Preparing delete file node------------------------------------------------------
+2021-03-08 09:55:39 INFO     DELETE STATUS: 200
+2021-03-08 09:55:39 INFO     DELETE RESPONSE: "success"
+
+2021-03-08 09:55:39 INFO     
+
+2021-03-08 09:55:39 INFO     Preparing delete file node------------------------------------------------------
+2021-03-08 09:55:39 INFO     DELETE STATUS: 200
+2021-03-08 09:55:39 INFO     DELETE RESPONSE: "success"
+
+2021-03-08 09:55:39 INFO     
+
+2021-03-08 09:55:39 INFO     Preparing delete file node------------------------------------------------------
+2021-03-08 09:55:40 INFO     DELETE STATUS: 200
+2021-03-08 09:55:40 INFO     DELETE RESPONSE: "success"
+
+2021-03-08 09:55:40 INFO     
+
+2021-03-08 09:55:40 INFO     Preparing delete file entity----------------------------------------------------
+2021-03-08 09:55:41 INFO     DELETE STATUS: 200
+2021-03-08 09:55:41 INFO     DELETE RESPONSE: {"result": {"mutatedEntities": {"DELETE": [{"typeName": "file_data", "attributes": {"global_entity_id": "file_data-54fd6954-801e-11eb-b013-be498ca98c54-1615215332", "owner": "EntityInfoUnittest", "createTime": 1615215332, "qualifiedName": "/data/vre-storage/unittest_entity_info/raw/entity_info_test_1", "name": "/data/vre-storage/unittest_entity_info/raw/entity_info_test_1", "description": "string", "full_path": "/data/vre-storage/unittest_entity_info/raw/entity_info_test_1"}, "guid": "7fcc1b9a-750b-4829-b2a0-b82847141d18", "status": "ACTIVE", "displayText": "/data/vre-storage/unittest_entity_info/raw/entity_info_test_1", "classificationNames": [], "meaningNames": [], "meanings": [], "isIncomplete": false, "labels": ["unittest"]}]}}}
+
+2021-03-08 09:55:41 INFO     
+
+2021-03-08 09:55:41 INFO     Preparing delete file entity----------------------------------------------------
+2021-03-08 09:55:42 INFO     DELETE STATUS: 200
+2021-03-08 09:55:42 INFO     DELETE RESPONSE: {"result": {"mutatedEntities": {"DELETE": [{"typeName": "file_data", "attributes": {"global_entity_id": "file_data-55b8beac-801e-11eb-b013-be498ca98c54-1615215334", "owner": "EntityInfoUnittest", "createTime": 1615215334, "qualifiedName": "/vre-data/unittest_entity_info/raw/entity_info_test_3", "name": "/vre-data/unittest_entity_info/raw/entity_info_test_3", "description": "string", "full_path": "/vre-data/unittest_entity_info/raw/entity_info_test_3"}, "guid": "78d9ecd1-bde4-474d-be67-0d1248283d86", "status": "ACTIVE", "displayText": "/vre-data/unittest_entity_info/raw/entity_info_test_3", "classificationNames": [], "meaningNames": [], "meanings": [], "isIncomplete": false, "labels": ["unittest"]}]}}}
+
+2021-03-08 09:55:42 INFO     
+
+2021-03-08 09:55:42 INFO     Preparing delete file entity----------------------------------------------------
+2021-03-08 09:55:42 INFO     DELETE STATUS: 200
+2021-03-08 09:55:42 INFO     DELETE RESPONSE: {"result": {"mutatedEntities": {"DELETE": [{"typeName": "file_data", "attributes": {"global_entity_id": "file_data-564568b6-801e-11eb-8428-be498ca98c54-1615215334", "owner": "EntityInfoUnittest", "createTime": 1615215334, "qualifiedName": "/data/vre-storage/unittest_entity_info/processed/straight_copy/entity_info_test_2", "name": "/data/vre-storage/unittest_entity_info/processed/straight_copy/entity_info_test_2", "description": "string", "full_path": "/data/vre-storage/unittest_entity_info/processed/straight_copy/entity_info_test_2"}, "guid": "24a9c806-4251-4874-82a8-c1f90dd1517b", "status": "ACTIVE", "displayText": "/data/vre-storage/unittest_entity_info/processed/straight_copy/entity_info_test_2", "classificationNames": [], "meaningNames": [], "meanings": [], "isIncomplete": false, "labels": ["unittest"]}]}}}
+
+2021-03-08 09:55:42 INFO     
+
+2021-03-08 09:55:42 INFO     Preparing delete project--------------------------------------------------------
+2021-03-08 09:55:42 INFO     DELETE STATUS: 200
+2021-03-08 09:55:42 INFO     DELETE RESPONSE: "success"
+
