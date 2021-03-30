@@ -1,6 +1,6 @@
 import unittest
 from tests.logger import Logger
-from tests.prepare_test import SetUpTest
+from tests.prepare_test import SetUpTest, SetupException
 
 
 class TestProjectFileCheck(unittest.TestCase):
@@ -39,14 +39,16 @@ class TestProjectFileCheck(unittest.TestCase):
             cls.core_file_id = create_file_core_result.get('id')
             cls.copy_file_id = create_file_straight_copy_result.get('id')
             cls.file_id = [cls.raw_file_id, cls.core_file_id, cls.copy_file_id]
-
             cls.raw_file_guid = create_file_raw_result.get('guid')
             cls.core_file_guid = create_file_core_result.get('guid')
             cls.copy_file_guid = create_file_straight_copy_result.get('guid')
             cls.file_guid = [cls.raw_file_guid, cls.core_file_guid, cls.copy_file_guid]
         except Exception as e:
             cls.log.error(f"Failed set up test due to error: {e}")
-            raise unittest.SkipTest(f"Failed setup test {e}")
+            if cls.container_id:
+                cls.log.error(f"DELETE PROJECT: {cls.container_id}")
+                cls.test.delete_project(cls.container_id)
+            raise SetupException
 
     @classmethod
     def tearDownClass(cls):

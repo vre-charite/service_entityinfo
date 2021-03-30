@@ -46,6 +46,9 @@ class CreateFilePOST(BaseModel):
     operator: str = ""
     tags: list = []
     global_entity_id: str = ""
+    parent_folder_geid: str = None
+    project_code: str
+
 
 
 class CreateFilePOSTResponse(APIResponse):
@@ -90,6 +93,19 @@ class DatasetFileQueryPOST(PaginationRequest):
           "Greenroom",
           "Raw"
         ]
+    })
+
+class DatasetFileQueryPOSTV2(PaginationRequest):
+    query: dict = Field({}, example={
+        'labels': ['File', 'Folder'],
+        "File": {
+            "name": "test",
+            "partial": ["name"],
+            "case_insensitive": ["name"],
+        },
+        "Folder": {
+            "folder_name": "test",
+        }
     })
 
 

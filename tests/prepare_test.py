@@ -6,6 +6,10 @@ from fastapi.testclient import TestClient
 from app import app
 
 
+class SetupException(Exception):
+    "Failed setup test"
+
+
 class SetUpTest:
 
     def __init__(self, log):
@@ -80,8 +84,12 @@ class SetUpTest:
                       "operator": "EntityInfoUnittest",
                       "parent_query": {}
                     }
+        if file_event.get("parent_geid"):
+            payload["parent_folder_geid"] = file_event.get("parent_geid")
         testing_api = ConfigClass.DATAOPS + '/v1/filedata/'
         try:
+            self.log.info(f'POST API: {testing_api}')
+            self.log.info(f'POST API: {payload}')
             res = requests.post(testing_api, json=payload)
             self.log.info(f"RESPONSE DATA: {res.text}")
             self.log.info(f"RESPONSE STATUS: {res.status_code}")
@@ -90,6 +98,46 @@ class SetUpTest:
             return result
         except Exception as e:
             self.log.info(f"ERROR CREATING FILE: {e}")
+            raise e
+
+    def create_folder(self, geid, project_code):
+        self.log.info("\n")
+        self.log.info("Creating testing folder".ljust(80, '-'))
+        payload = {
+            "global_entity_id": geid,
+            "folder_name": "entityinfo_unittest_folder",
+            "folder_level": 0,
+            "uploader": "EntityInfoUnittest",
+            "folder_relative_path": "",
+            "zone": "greenroom",
+            "project_code": project_code,
+            "folder_tags": [],
+            "folder_parent_geid": "",
+            "folder_parent_name": "",
+        }
+        testing_api = '/v1/folders'
+        try:
+            res = self.app.post(testing_api, json=payload)
+            self.log.info(f"RESPONSE DATA: {res.text}")
+            self.log.info(f"RESPONSE STATUS: {res.status_code}")
+            assert res.status_code == 200
+            result = res.json().get('result')
+            return result
+        except Exception as e:
+            self.log.info(f"ERROR CREATING FOLDER: {e}")
+            raise e
+
+    def delete_folder_node(self, node_id):
+        self.log.info("\n")
+        self.log.info("Preparing delete folder node".ljust(80, '-'))
+        delete_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Folder/node/%s" % str(node_id)
+        try:
+            delete_res = requests.delete(delete_api)
+            self.log.info(f"DELETE STATUS: {delete_res.status_code}")
+            self.log.info(f"DELETE RESPONSE: {delete_res.text}")
+        except Exception as e:
+            self.log.info(f"ERROR DELETING FILE: {e}")
+            self.log.info(f"PLEASE DELETE THE FILE MANUALLY WITH ID: {node_id}")
             raise e
 
     def delete_file_node(self, node_id):
