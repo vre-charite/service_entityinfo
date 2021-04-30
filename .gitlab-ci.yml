@@ -10,6 +10,7 @@ build:
   tags:
     - VRE-Deployment
   script:
+    - git submodule update --recursive --init --remote
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
     - docker build -t ${CONTAINER_IMAGE} .
     - docker push ${CONTAINER_IMAGE}
