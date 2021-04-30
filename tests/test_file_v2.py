@@ -1,10 +1,10 @@
 import unittest
 from tests.logger import Logger
-from tests.prepare_test import SetUpTest
+from tests.prepare_test import SetUpTest, SetupException
 
-
+@unittest.skip('replaced by meta API')
 class TestProjectFileCheck(unittest.TestCase):
-    log = Logger(name='test_project_api.log')
+    log = Logger(name='test_file_api.log')
     test = SetUpTest(log)
     project_code = "unittest_entity_info_files"
     container_id = ''
@@ -53,7 +53,7 @@ class TestProjectFileCheck(unittest.TestCase):
             cls.file_guid = [cls.raw_file_guid, cls.core_file_guid, cls.copy_file_guid, folder_file]
         except Exception as e:
             cls.log.error(f"Failed set up test due to error: {e}")
-            raise unittest.SkipTest(f"Failed setup test {e}")
+            raise SetupException
 
     @classmethod
     def tearDownClass(cls):
@@ -92,7 +92,7 @@ class TestProjectFileCheck(unittest.TestCase):
             self.log.info(result)
             self.assertEqual(result.status_code, 200)
             res = result.json()
-            self.log.info(res)
+            self.log.info(res.text)
             res = res.get('result')
             self.assertEqual(isinstance(res, list), True)
             file = res[0]
@@ -120,10 +120,10 @@ class TestProjectFileCheck(unittest.TestCase):
         }
         try:
             result = self.app.post(f"/v2/files/{self.container_id}/query", json=data)
-            self.log.info(result)
+            self.log.info(result.text)
             self.assertEqual(result.status_code, 200)
             res = result.json()
-            self.log.info(res)
+            self.log.info(f"RES: {res}")
             res = res.get('result')
             self.assertEqual(isinstance(res, list), True)
             file = res[0]
@@ -153,7 +153,7 @@ class TestProjectFileCheck(unittest.TestCase):
         }
         try:
             result = self.app.post(f"/v2/files/{self.container_id}/query", json=data)
-            self.log.info(result)
+            self.log.info(result.text)
             self.assertEqual(result.status_code, 200)
             res = result.json()
             self.log.info(res)

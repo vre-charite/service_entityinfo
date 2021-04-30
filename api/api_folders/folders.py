@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
-from commons.logger_services.logger_factory_service import SrvLoggerFactory
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
 from models import folders as models
 from models.base_models import EAPIResponseCode
+from models.meta import get_parent_connections
 from resources.error_handler import catch_internal
 from config import ConfigClass
 import requests
@@ -65,7 +66,9 @@ class FolderNodes:
         else:
             raise("Create failed" + result_create_node.text)
 
-    @router.get('/folder/{geid}', response_model=models.FoldersGETResponse, summary="Folder Nodes Restful")
+    # Deprecated and has been merged into entity listing API
+    @router.get('/folder/{geid}', response_model=models.FoldersGETResponse, summary="Folder Nodes Restful",
+                deprecated=True)
     @catch_internal(_API_NAMESPACE)
     async def get(self, geid, query="{}",
                   page=0, page_size=10, order_by="time_created",
@@ -73,6 +76,7 @@ class FolderNodes:
                   zone='Greenroom',
                   datatype='Raw'):
         '''
+        Deprecated and has been merged into entity listing API
         Get function to get the entity by geid, currently not developped. please use another one instead
         Get /v1/project/${project_code}/home
         '''
@@ -125,29 +129,7 @@ class FolderNodes:
             raise(Exception('[v2 query] {}, {}'.format(
                 response_query.status_code, response_query.text)))
 
-        # get routing
-        response_routing = requests.get(
-            ConfigClass.NEO4J_HOST + '/v1/neo4j/relations/connected/{}'.format(geid))
-        routing = []
-        if response_routing.status_code == 200:
-            routing = response_routing.json()['result']
-        else:
-            raise(Exception('[v2 connected query] {}, {}'.format(
-                response_routing.status_code, response_routing.text)))
-
-        # add self node, if not returned by neo4j
-        if len([route for route in routing if route['global_entity_id'] == geid]) == 0:
-            self_query_payload = {
-                "global_entity_id": geid
-            }
-            self_query_respon = models.http_query_node(
-                "doesnotmatterforgeidquery", self_query_payload)
-            if self_query_respon.status_code == 200:
-                routing = routing + self_query_respon.json()
-            else:
-                raise(Exception('[v2 routing query] {}, {}'.format(
-                    self_query_respon.status_code, self_query_respon.text)))
-
+       
         total = int(response_query.json()["total"])
 
         # return response
@@ -157,7 +139,7 @@ class FolderNodes:
         api_response.num_of_pages = math.ceil(total / int(page_size))
         api_response.result = {
             "data": data,
-            "routing": routing
+            "routing": get_parent_connections(geid)
         }
         return api_response.json_response()
 

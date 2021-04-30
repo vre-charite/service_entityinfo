@@ -1,0 +1,1 @@
+namespace = "service_entityinfo"

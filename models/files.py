@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from models.base_models import APIResponse, PaginationRequest
 
 
-### CreateTrashPOST
+# CreateTrashPOST
 class CreateTrashPOST(BaseModel):
     full_path: str
     trash_full_path: str
@@ -10,12 +10,12 @@ class CreateTrashPOST(BaseModel):
 
 
 class CreateTrashPOSTResponse(APIResponse):
-    result: dict = Field({}, example={   
-                'archived': False,
-                'file_size': 1024,
-                'full_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
-                'generate_id': 'BCD-1234_2',
-                'guid': '5321880a-1a41-4bc8-a5d5-9767323205792',
+    result: dict = Field({}, example={
+        'archived': False,
+        'file_size': 1024,
+        'full_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
+        'generate_id': 'BCD-1234_2',
+        'guid': '5321880a-1a41-4bc8-a5d5-9767323205792',
                 'id': 478,
                 'labels': ['VRECore', 'TrashFile', 'Processed'],
                 'name': 'BCD-1234_file_2.aacn',
@@ -27,20 +27,19 @@ class CreateTrashPOSTResponse(APIResponse):
                 'type': 'processed',
                 'uploader': 'admin',
                 'operator': 'admin'
-          }
-      )
+    }
+    )
 
 
-### CreateFilePOST
+# CreateFilePOST
 class CreateFilePOST(BaseModel):
-    file_size: int 
+    file_size: int
     full_path: str
     generate_id: str
     guid: str
     namespace: str
-    type: str
     uploader: str
-    project_id: int 
+    project_id: int
     input_file_id: int = None
     process_pipeline: str = ""
     operator: str = ""
@@ -50,14 +49,13 @@ class CreateFilePOST(BaseModel):
     project_code: str
 
 
-
 class CreateFilePOSTResponse(APIResponse):
-    result: dict = Field({}, example={   
-                'archived': False,
-                'file_size': 1024,
-                'full_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
-                'generate_id': 'BCD-1234_2',
-                'guid': '5321880a-1a41-4bc8-a5d5-9767323205792',
+    result: dict = Field({}, example={
+        'archived': False,
+        'file_size': 1024,
+        'full_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
+        'generate_id': 'BCD-1234_2',
+        'guid': '5321880a-1a41-4bc8-a5d5-9767323205792',
                 'id': 478,
                 'labels': ['VRECore', 'File', 'Processed'],
                 'name': 'BCD-1234_file_2.aacn',
@@ -69,11 +67,13 @@ class CreateFilePOSTResponse(APIResponse):
                 'type': 'processed',
                 'uploader': 'admin',
                 'operator': 'admin',
-                'tags': ['greg','test']
-          }
-      )
+                'tags': ['greg', 'test']
+    }
+    )
 
-### DatasetFileQueryPOSTResponse
+# DatasetFileQueryPOSTResponse
+
+
 class DatasetFileQueryPOST(PaginationRequest):
     partial: bool = False
     query: dict = Field({}, example={
@@ -88,12 +88,13 @@ class DatasetFileQueryPOST(PaginationRequest):
         "time_created": "2021-01-08T17:09:51",
         "time_lastmodified": "2021-01-08T17:09:51",
         "uploader": "admin",
-        "labels": [ 
-          "File",
-          "Greenroom",
-          "Raw"
+        "labels": [
+            "File",
+            "Greenroom",
+            "Raw"
         ]
     })
+
 
 class DatasetFileQueryPOSTV2(PaginationRequest):
     query: dict = Field({}, example={
@@ -109,35 +110,33 @@ class DatasetFileQueryPOSTV2(PaginationRequest):
     })
 
 
-
-
 class DatasetFileQueryPOSTResponse(APIResponse):
-    result: dict = Field({}, example={
-           'code': 200,
-           'error_msg': '',
-           'num_of_pages': 14,
-           'page': 1,
-           'result': [{   
-               'archived': False,
-               'description': 'description',
-               'file_size': 0,
-               'full_path': 'test/zy/testzy9.txt',
-               'generate_id': '',
-               'guid': 'f1547da2-8372-4ae3-9e2b-17c80e97f113',
-               'id': 74,
-               'labels': ['Raw', 'File', 'Greenroom'],
-               'name': 'testzy9.txt',
-               'path': 'test/zy',
-               'time_created': '2021-01-08T17:09:51',
-               'time_lastmodified': '2021-01-08T17:09:51',
-               'uploader': 'testzy',
-               'process_pipeline': 'test'
-            }],
-            'total': 67
-        }
+    result: dict = Field({}, example=[{
+        'archived': False,
+        'description': 'description',
+        'file_size': 0,
+        'full_path': 'test/zy/testzy9.txt',
+        'generate_id': '',
+        'guid': 'f1547da2-8372-4ae3-9e2b-17c80e97f113',
+        'id': 74,
+        'labels': ['Raw', 'File', 'Greenroom'],
+        'name': 'testzy9.txt',
+        'path': 'test/zy',
+        'time_created': '2021-01-08T17:09:51',
+        'time_lastmodified': '2021-01-08T17:09:51',
+        'uploader': 'testzy',
+        'process_pipeline': 'test'
+    }],
     )
 
 
-
-
-
+class FilesStatsGETResponse(APIResponse):
+    result: dict = Field({}, example={
+        "uploaded": 0,
+        "downloaded": 0,
+        "approved": 0,  # get from neo4j
+        # get from neo4j(archived: False), all files in greenroom
+        "greenroom": 0,
+        "core": 0  # get from neo4j(archived: False), all files in core
+    }
+    )

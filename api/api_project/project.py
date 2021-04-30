@@ -14,7 +14,7 @@ class FileCheck:
                 response_model=models.CheckFileResponse,
                 tags=["File Check"],
                 summary="Check file exists")
-    async def get(self, project_code, zone, type, filename):
+    async def get(self, project_code, zone, type, filename, job_type):
         """
         Check if file exists in given project,
         if file in a particular folder, could use folder in type
@@ -27,24 +27,17 @@ class FileCheck:
             api_response.code = EAPIResponseCode.bad_request
             api_response.error_msg = f"Invalid type {data_type}"
             return api_response.json_response()
-        elif data_type.lower() == 'processed':
-            label_type = 'Processed'
-        else:
-            label_type = 'Raw'
         if zone.lower() == 'greenroom':
             zone = 'Greenroom'
-            path = f"/data/vre-storage/{project_code}/{type}"
         elif zone.lower() == 'vrecore':
             zone = 'VRECore'
-            path = f"/vre-data/{project_code}/raw"
         else:
             api_response.code = EAPIResponseCode.bad_request
             api_response.error_msg = "Invalid zone"
             return api_response.json_response()
-        labels = ['File', label_type, zone]
-        data = {'end_params': {'name': filename,
-                               'path': path},
-                'end_label': labels,
+        file_label = 'File' if job_type == 'AS_FILE' else 'Folder'
+        data = {'end_params': {'name': filename},
+                'end_label': [file_label, zone],
                 'start_label': 'Dataset',
                 'start_params': {'code': project_code}}
         try:

@@ -4,6 +4,7 @@ from config import ConfigClass
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from app import app
+from resources.helpers import get_geid
 
 
 class SetupException(Exception):
@@ -30,7 +31,8 @@ class SetUpTest:
                   "description": "Project created by unit test, will be deleted soon...",
                   "discoverable": discoverable,
                   "type": "Usecase",
-                  "tags": ['test']
+                  "tags": ['test'],
+                  "global_entity_id": get_geid() 
                   }
         self.log.info(f"POST API: {testing_api}")
         self.log.info(f"POST params: {params}")
@@ -39,8 +41,8 @@ class SetUpTest:
             self.log.info(f"RESPONSE DATA: {res.text}")
             self.log.info(f"RESPONSE STATUS: {res.status_code}")
             assert res.status_code == 200
-            node_id = res.json()[0]['id']
-            return node_id
+            node = res.json()[0]
+            return node
         except Exception as e:
             self.log.info(f"ERROR CREATING PROJECT: {e}")
             raise e
@@ -50,6 +52,7 @@ class SetUpTest:
         self.log.info("Preparing delete project".ljust(80, '-'))
         delete_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Dataset/node/%s" % str(node_id)
         try:
+            self.log.info(f"DELETE Project: {node_id}")
             delete_res = requests.delete(delete_api)
             self.log.info(f"DELETE STATUS: {delete_res.status_code}")
             self.log.info(f"DELETE RESPONSE: {delete_res.text}")
@@ -65,36 +68,62 @@ class SetUpTest:
         file_type = file_event.get('file_type')
         namespace = file_event.get('namespace')
         project_code = file_event.get('project_code')
+        project_id = file_event.get('project_id')
         if namespace == 'vrecore':
             path = f"/vre-data/{project_code}/{file_type}"
         else:
             path = f"/data/vre-storage/{project_code}/{file_type}"
+        geid_res = requests.get(ConfigClass.UTILITY_SERVICE + "/v1/utility/id")
+        self.log.info(f"Getting global entity ID: {geid_res.text}")
+        global_entity_id = geid_res.json()['result']
+        if namespace.lower() == 'vrecore':
+            namespace_label = 'VRECore'
+        else:
+            namespace_label = 'Greenroom'
         payload = {
-                      "uploader": "EntityInfoUnittest",
-                      "file_name": filename,
+                      "file_size": 1000,
+                      "full_path": path + '/' + filename,
                       "path": path,
-                      "file_size": 10,
-                      "description": "string",
+                      "generate_id": "undefined",
+                      "guid": "unittest_guid",
                       "namespace": namespace,
-                      "data_type": file_type,
-                      "labels": ['unittest'],
+                      "uploader": "unittest",
+                      "project_id": project_id,
+                      "name": filename,
+                      "input_file_id": global_entity_id,
+                      "process_pipeline": "raw",
+                      "operator": "entity_info_unittest",
+                      "tags": ['tag1', 'tag2'],
+                      "global_entity_id": global_entity_id,
+                      "parent_folder_geid": "None",
                       "project_code": project_code,
-                      "generate_id": "",
-                      "process_pipeline": "",
-                      "operator": "EntityInfoUnittest",
-                      "parent_query": {}
+                      "extra_labels": [namespace_label]
                     }
-        if file_event.get("parent_geid"):
-            payload["parent_folder_geid"] = file_event.get("parent_geid")
-        testing_api = ConfigClass.DATAOPS + '/v1/filedata/'
+        testing_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/File"
         try:
             self.log.info(f'POST API: {testing_api}')
-            self.log.info(f'POST API: {payload}')
+            self.log.info(f'POST payload: {payload}')
             res = requests.post(testing_api, json=payload)
             self.log.info(f"RESPONSE DATA: {res.text}")
             self.log.info(f"RESPONSE STATUS: {res.status_code}")
             assert res.status_code == 200
-            result = res.json().get('result')
+            result = res.json()[0]
+            file_id = result.get('id')
+            relation_payload = {"start_id": project_id,
+                                "end_id": file_id}
+            relation_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/own"
+            relation_res = requests.post(relation_api, json=relation_payload)
+            self.log.info(f"Create relation res: {relation_res.text}")
+
+            # get folder id by geid
+            if file_event.get("parent_geid"):
+                folder_query = {"global_entity_id": file_event.get("parent_geid")}
+                response = requests.post(ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Folder/query", json=folder_query)
+                folder_node = response.json()[0]
+                relation_payload = {"start_id": folder_node["id"], "end_id": file_id}
+                relation_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/own"
+                relation_res = requests.post(relation_api, json=relation_payload)
+                self.log.info(f"Create relation res: {relation_res.text}")
             return result
         except Exception as e:
             self.log.info(f"ERROR CREATING FILE: {e}")

@@ -1,4 +1,5 @@
 import os
+# os.environ['env'] = 'test'
 
 
 class ConfigClass(object):
@@ -12,6 +13,7 @@ class ConfigClass(object):
         DATAOPS = "http://10.3.7.239:5063"
         CATALOGUING = "http://10.3.7.237:5064"
         PROVENANCE_SERVICE = "http://10.3.7.202:5077"
+        UTILITY_SERVICE = "http://10.3.7.222:5062"
     else:
         NEO4J_HOST = "http://neo4j.utility:5062"
         PROVENANCE_SERVICE = "http://provenance.utility:5077"

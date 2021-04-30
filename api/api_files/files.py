@@ -4,7 +4,7 @@ from models import files as models
 from models.base_models import EAPIResponseCode
 from models import folders as folder_models
 from resources.error_handler import catch_internal
-from commons.logger_services.logger_factory_service import SrvLoggerFactory
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
 from config import ConfigClass
 import requests
 import math
@@ -17,7 +17,7 @@ _API_NAMESPACE = "file_entity_restful"
 @cbv(router)
 class CreateFile:
     def __init__(self):
-       self._logger = SrvLoggerFactory('api_file').get_logger()
+        self._logger = SrvLoggerFactory('api_file').get_logger()
 
     @router.post('/', response_model=models.CreateFilePOSTResponse, summary="Create file")
     @catch_internal(_API_NAMESPACE)
@@ -55,15 +55,13 @@ class CreateFile:
 
         if data.input_file_id:
             del payload["input_file_id"]
-
-        if data.type == "processed":
             if not data.process_pipeline:
                 api_response.code = EAPIResponseCode.bad_request
-                api_response.error_msg = "Missing required field process_pipeline"
+                api_response.error_msg = "Missing required field process_pipeline for input_file_id"
                 return api_response.json_response()
             if not data.operator:
                 api_response.code = EAPIResponseCode.bad_request
-                api_response.error_msg = "Missing required field operator"
+                api_response.error_msg = "Missing required field operator for input_file_id"
                 return api_response.json_response()
 
         extra_labels = []
@@ -74,19 +72,8 @@ class CreateFile:
             extra_labels.append("VRECore")
             es_payload['zone'] = 'VRECore'
 
-        if data.type == "raw":
-            extra_labels.append("Raw")
-            es_payload['file_type'] = 'Raw'
-        else:
-            extra_labels.append("Processed")
-            es_payload['file_type'] = 'Processed'
         del payload["namespace"]
-        del payload["type"]
         payload["extra_labels"] = extra_labels
-
-        is_root = False if data.parent_folder_geid else True
-        es_payload["is_root"] = is_root
-        payload["is_root"] = is_root
         payload["list_priority"] = 20
 
         # Create node
@@ -98,18 +85,8 @@ class CreateFile:
             return api_response.json_response()
         file_node = response.json()[0]
 
-        # Create Dataset to file relation
-        relation_payload = {"start_id": data.project_id,
-                            "end_id": file_node["id"]}
-        response = requests.post(
-            ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/own", json=relation_payload)
-        if response.status_code != 200:
-            api_response.code = EAPIResponseCode.internal_error
-            api_response.error_msg = f"Neo4j error: {response.json()}"
-            return api_response.json_response()
-
-        # Create Folder to File relation
         if data.parent_folder_geid:
+            # Create Folder to File relation
             respon_parent_folder_query = folder_models.http_query_node(
                 data.namespace, {"global_entity_id": data.parent_folder_geid})
             if not respon_parent_folder_query.status_code == 200:
@@ -128,11 +105,25 @@ class CreateFile:
                 api_response.code = EAPIResponseCode.internal_error
                 api_response.error_msg = f"Neo4j error: {response.json()}"
                 return api_response.json_response()
+        else:
+            # Create Dataset to file relation
+            relation_payload = {"start_id": data.project_id,
+                                "end_id": file_node["id"]}
+            response = requests.post(
+                ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/own", json=relation_payload)
+            if response.status_code != 200:
+                api_response.code = EAPIResponseCode.internal_error
+                api_response.error_msg = f"Neo4j error: {response.json()}"
+                return api_response.json_response()
 
         # Create input to processed relation
+        # curretly wouldn't be triggered by dataops_util
         if data.input_file_id:
             relation_payload = {
-                "start_id": data.input_file_id, "end_id": file_node["id"]}
+                "start_id": data.input_file_id,
+                "end_id": file_node["id"],
+                "properties": {"operator": data.operator}}
+            self._logger.debug("CreateFile relation_payload: " + str(relation_payload))
             response = requests.post(
                 ConfigClass.NEO4J_HOST + f"/v1/neo4j/relations/{data.process_pipeline}", json=relation_payload)
             if response.status_code != 200:
@@ -141,7 +132,7 @@ class CreateFile:
                 return api_response.json_response()
 
         # Create entity in Elastic Search
-        es_res = requests.post(ConfigClass.PROVENANCE_SERVICE + '/v1/file-meta', json=es_payload)
+        es_res = requests.post(ConfigClass.PROVENANCE_SERVICE + '/v1/entity/file', json=es_payload)
         self._logger.info(f"Elastic Search Result: {es_res.json()}")
         if es_res.status_code != 200:
             api_response.code = EAPIResponseCode.internal_error
@@ -205,6 +196,9 @@ class DatasetFileQuery:
 
 @cbv(router)
 class TrashCreate:
+    def __init__(self):
+        self._logger = SrvLoggerFactory('api_delete_file').get_logger()
+
     @router.post('/trash', response_model=models.CreateTrashPOSTResponse, summary="Create TrashFile")
     async def post(self, data: models.CreateTrashPOST):
         api_response = models.CreateTrashPOSTResponse()
@@ -232,7 +226,6 @@ class TrashCreate:
             "generate_id": file_node.get("generate_id"),
             "archived": True,
             "extra_labels": labels,
-            "process_pipeline": "data_delete",
             "uploader": file_node.get("uploader"),
             "tags": file_node.get("tags"),
             "global_entity_id": data.trash_geid,
@@ -261,7 +254,8 @@ class TrashCreate:
 
         # Create File to TrashFile relation
         relation_payload = {
-            "start_id": file_node["id"], "end_id": trash_file["id"]}
+            "start_id": file_node["id"], "end_id": trash_file["id"],
+            "properties": {"operator": file_node.get("operator")}}
         response = requests.post(
             ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/deleted", json=relation_payload)
         # Create Dataset to file relation
@@ -273,7 +267,7 @@ class TrashCreate:
 
         # Update Elastic Search Entity
         es_payload = {
-            "global_entity_id": trash_file_data["global_entity_id"],
+            "global_entity_id": file_node["global_entity_id"],
             "updated_fields": {
                 "name": name,
                 "path": trash_path,
@@ -283,7 +277,9 @@ class TrashCreate:
                 "time_lastmodified": time.time()
             }
         }
-        es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + '/v1/file-meta', json=es_payload)
+        self._logger.info(f"es delete file payload: {es_payload}")
+        es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + '/v1/entity/file', json=es_payload)
+        self._logger.info(f"es delete file response: {es_res.text}")
         if es_res.status_code != 200:
             api_response.code = EAPIResponseCode.internal_error
             api_response.error_msg = f"Elastic Search Error: {es_res.json()}"

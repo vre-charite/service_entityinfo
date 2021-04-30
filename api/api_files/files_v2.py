@@ -35,6 +35,11 @@ class DatasetFileQueryV2:
 
         try:
             response = requests.get(ConfigClass.NEO4J_HOST + f"/v1/neo4j/nodes/Dataset/node/{dataset_id}")
+            if response.status_code != 200:
+                error_msg = response.json()
+                api_response.code = EAPIResponseCode.internal_error
+                api_response.error_msg = f"Neo4j error: {error_msg}"
+                return api_response.json_response()
             dataset = response.json()[0]
         except Exception as e:
             api_response.code = EAPIResponseCode.internal_error
@@ -57,8 +62,18 @@ class DatasetFileQueryV2:
                 "end_params": query, 
             },
         }
-        response = requests.post(ConfigClass.NEO4J_HOST + "/v2/neo4j/relations/query", json=relation_payload)
-        nodes = response.json()
+        try:
+            response = requests.post(ConfigClass.NEO4J_HOST + "/v2/neo4j/relations/query", json=relation_payload)
+            if response.status_code != 200:
+                error_msg = response.json()
+                api_response.code = EAPIResponseCode.internal_error
+                api_response.error_msg = f"Neo4j error: {error_msg}"
+                return api_response.json_response()
+            nodes = response.json()
+        except Exception as e:
+            api_response.code = EAPIResponseCode.internal_error
+            api_response.error_msg = "Neo4j error: " + str(e)
+            return api_response.json_response()
 
         total = response.json()["total"]
         api_response.result = nodes["results"]

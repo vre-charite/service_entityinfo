@@ -1,0 +1,189 @@
+2021-04-26 15:05:44 INFO     
+
+2021-04-26 15:05:44 INFO     Preparing testing project-------------------------------------------------------
+2021-04-26 15:05:44 INFO     POST API: http://10.3.7.216:5062/v1/neo4j/nodes/Dataset
+2021-04-26 15:05:44 INFO     POST params: {'name': 'EntityInfoUnitTest', 'path': 'unittest_entity_info_files_meta', 'code': 'unittest_entity_info_files_meta', 'description': 'Project created by unit test, will be deleted soon...', 'discoverable': 'true', 'type': 'Usecase', 'tags': ['test'], 'global_entity_id': '7d3c25ae-b21d-4406-bff7-1971d8dfffad-1619463951'}
+2021-04-26 15:05:45 INFO     RESPONSE DATA: [{"id": 8611, "labels": ["Dataset"], "name": "EntityInfoUnitTest", "time_created": "2021-04-26T19:05:51", "time_lastmodified": "2021-04-26T19:05:51", "path": "unittest_entity_info_files_meta", "code": "unittest_entity_info_files_meta", "description": "Project created by unit test, will be deleted soon...", "discoverable": "true", "type": "Usecase", "tags": ["test"], "global_entity_id": "7d3c25ae-b21d-4406-bff7-1971d8dfffad-1619463951"}]
+
+2021-04-26 15:05:45 INFO     RESPONSE STATUS: 200
+2021-04-26 15:05:45 INFO     
+
+2021-04-26 15:05:45 INFO     Creating testing file-----------------------------------------------------------
+2021-04-26 15:05:45 INFO     Getting global entity ID: {"code": 200, "error_msg": "", "result": "5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951"}
+
+2021-04-26 15:05:45 INFO     POST API: http://10.3.7.216:5062/v1/neo4j/nodes/File
+2021-04-26 15:05:45 INFO     POST payload: {'file_size': 1000, 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_1', 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'greenroom', 'uploader': 'unittest', 'project_id': 8611, 'name': 'entity_info_meta_test_1', 'input_file_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta', 'extra_labels': ['Greenroom']}
+2021-04-26 15:05:45 INFO     RESPONSE DATA: [{"id": 8613, "labels": ["File", "Greenroom"], "name": "entity_info_meta_test_1", "time_created": "2021-04-26T19:05:51", "time_lastmodified": "2021-04-26T19:05:51", "file_size": 1000, "full_path": "/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_1", "path": "/data/vre-storage/unittest_entity_info_files_meta/None", "generate_id": "undefined", "guid": "unittest_guid", "namespace": "greenroom", "uploader": "unittest", "project_id": 8611, "input_file_id": "5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951", "process_pipeline": "raw", "operator": "entity_info_unittest", "tags": ["tag1", "tag2"], "global_entity_id": "5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951", "parent_folder_geid": "None", "project_code": "unittest_entity_info_files_meta"}]
+
+2021-04-26 15:05:45 INFO     RESPONSE STATUS: 200
+2021-04-26 15:05:45 INFO     Create relation res: "success"
+
+2021-04-26 15:05:45 INFO     
+
+2021-04-26 15:05:45 INFO     Creating testing file-----------------------------------------------------------
+2021-04-26 15:05:45 INFO     Getting global entity ID: {"code": 200, "error_msg": "", "result": "5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951"}
+
+2021-04-26 15:05:45 INFO     POST API: http://10.3.7.216:5062/v1/neo4j/nodes/File
+2021-04-26 15:05:45 INFO     POST payload: {'file_size': 1000, 'full_path': '/vre-data/unittest_entity_info_files_meta/None/entity_info_meta_test_3', 'path': '/vre-data/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'vrecore', 'uploader': 'unittest', 'project_id': 8611, 'name': 'entity_info_meta_test_3', 'input_file_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta', 'extra_labels': ['VRECore']}
+2021-04-26 15:05:45 INFO     RESPONSE DATA: [{"id": 8623, "labels": ["File", "VRECore"], "name": "entity_info_meta_test_3", "time_created": "2021-04-26T19:05:51", "time_lastmodified": "2021-04-26T19:05:51", "file_size": 1000, "full_path": "/vre-data/unittest_entity_info_files_meta/None/entity_info_meta_test_3", "path": "/vre-data/unittest_entity_info_files_meta/None", "generate_id": "undefined", "guid": "unittest_guid", "namespace": "vrecore", "uploader": "unittest", "project_id": 8611, "input_file_id": "5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951", "process_pipeline": "raw", "operator": "entity_info_unittest", "tags": ["tag1", "tag2"], "global_entity_id": "5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951", "parent_folder_geid": "None", "project_code": "unittest_entity_info_files_meta"}]
+
+2021-04-26 15:05:45 INFO     RESPONSE STATUS: 200
+2021-04-26 15:05:45 INFO     Create relation res: "success"
+
+2021-04-26 15:05:45 INFO     
+
+2021-04-26 15:05:45 INFO     Creating testing file-----------------------------------------------------------
+2021-04-26 15:05:45 INFO     Getting global entity ID: {"code": 200, "error_msg": "", "result": "9db14341-82da-424f-afca-d8f3268ade05-1619463951"}
+
+2021-04-26 15:05:45 INFO     POST API: http://10.3.7.216:5062/v1/neo4j/nodes/File
+2021-04-26 15:05:45 INFO     POST payload: {'file_size': 1000, 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_2', 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'greenroom', 'uploader': 'unittest', 'project_id': 8611, 'name': 'entity_info_meta_test_2', 'input_file_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta', 'extra_labels': ['Greenroom']}
+2021-04-26 15:05:45 INFO     RESPONSE DATA: [{"id": 8617, "labels": ["File", "Greenroom"], "name": "entity_info_meta_test_2", "time_created": "2021-04-26T19:05:52", "time_lastmodified": "2021-04-26T19:05:52", "file_size": 1000, "full_path": "/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_2", "path": "/data/vre-storage/unittest_entity_info_files_meta/None", "generate_id": "undefined", "guid": "unittest_guid", "namespace": "greenroom", "uploader": "unittest", "project_id": 8611, "input_file_id": "9db14341-82da-424f-afca-d8f3268ade05-1619463951", "process_pipeline": "raw", "operator": "entity_info_unittest", "tags": ["tag1", "tag2"], "global_entity_id": "9db14341-82da-424f-afca-d8f3268ade05-1619463951", "parent_folder_geid": "None", "project_code": "unittest_entity_info_files_meta"}]
+
+2021-04-26 15:05:45 INFO     RESPONSE STATUS: 200
+2021-04-26 15:05:46 INFO     Create relation res: "success"
+
+2021-04-26 15:05:46 INFO     Project ID: 8611
+2021-04-26 15:05:46 INFO     File Info: {'id': 8613, 'labels': ['File', 'Greenroom'], 'name': 'entity_info_meta_test_1', 'time_created': '2021-04-26T19:05:51', 'time_lastmodified': '2021-04-26T19:05:51', 'file_size': 1000, 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_1', 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'greenroom', 'uploader': 'unittest', 'project_id': 8611, 'input_file_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta'}
+2021-04-26 15:05:46 INFO     File Info: {'id': 8623, 'labels': ['File', 'VRECore'], 'name': 'entity_info_meta_test_3', 'time_created': '2021-04-26T19:05:51', 'time_lastmodified': '2021-04-26T19:05:51', 'file_size': 1000, 'full_path': '/vre-data/unittest_entity_info_files_meta/None/entity_info_meta_test_3', 'path': '/vre-data/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'vrecore', 'uploader': 'unittest', 'project_id': 8611, 'input_file_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta'}
+2021-04-26 15:05:46 INFO     File Info: {'id': 8617, 'labels': ['File', 'Greenroom'], 'name': 'entity_info_meta_test_2', 'time_created': '2021-04-26T19:05:52', 'time_lastmodified': '2021-04-26T19:05:52', 'file_size': 1000, 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_2', 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'greenroom', 'uploader': 'unittest', 'project_id': 8611, 'input_file_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta'}
+2021-04-26 15:05:46 INFO     
+
+2021-04-26 15:05:46 INFO     Creating testing folder---------------------------------------------------------
+2021-04-26 15:05:46 INFO     RESPONSE DATA: {"code":200,"error_msg":"","page":0,"total":1,"num_of_pages":1,"result":{"id":8626,"labels":["Greenroom","Folder"],"name":"entityinfo_unittest_folder","time_created":"2021-04-26T19:05:52","time_lastmodified":"2021-04-26T19:05:52","global_entity_id":"entity_info_meta_test_geid","folder_level":0,"folder_relative_path":"","project_code":"unittest_entity_info_files_meta","tags":[],"list_priority":10,"uploader":"EntityInfoUnittest"}}
+2021-04-26 15:05:46 INFO     RESPONSE STATUS: 200
+2021-04-26 15:05:46 INFO     
+
+2021-04-26 15:05:46 INFO     Creating testing file-----------------------------------------------------------
+2021-04-26 15:05:46 INFO     Getting global entity ID: {"code": 200, "error_msg": "", "result": "f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952"}
+
+2021-04-26 15:05:46 INFO     POST API: http://10.3.7.216:5062/v1/neo4j/nodes/File
+2021-04-26 15:05:46 INFO     POST payload: {'file_size': 1000, 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_folder_file_meta_1', 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'greenroom', 'uploader': 'unittest', 'project_id': 8611, 'name': 'entity_info_folder_file_meta_1', 'input_file_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta', 'extra_labels': ['Greenroom']}
+2021-04-26 15:05:46 INFO     RESPONSE DATA: [{"id": 8627, "labels": ["File", "Greenroom"], "name": "entity_info_folder_file_meta_1", "time_created": "2021-04-26T19:05:52", "time_lastmodified": "2021-04-26T19:05:52", "file_size": 1000, "full_path": "/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_folder_file_meta_1", "path": "/data/vre-storage/unittest_entity_info_files_meta/None", "generate_id": "undefined", "guid": "unittest_guid", "namespace": "greenroom", "uploader": "unittest", "project_id": 8611, "input_file_id": "f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952", "process_pipeline": "raw", "operator": "entity_info_unittest", "tags": ["tag1", "tag2"], "global_entity_id": "f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952", "parent_folder_geid": "None", "project_code": "unittest_entity_info_files_meta"}]
+
+2021-04-26 15:05:46 INFO     RESPONSE STATUS: 200
+2021-04-26 15:05:46 INFO     Create relation res: "success"
+
+2021-04-26 15:05:47 INFO     Create relation res: "success"
+
+2021-04-26 15:05:47 INFO     
+
+2021-04-26 15:05:47 INFO     -------------------------------01 test get_files--------------------------------
+2021-04-26 15:05:47 INFO     <Response [200]>
+2021-04-26 15:05:47 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 4, 'num_of_pages': 1, 'result': {'data': [{'id': 8626, 'labels': ['Greenroom', 'Folder'], 'global_entity_id': 'entity_info_meta_test_geid', 'folder_level': 0, 'list_priority': 10, 'folder_relative_path': '', 'time_lastmodified': '2021-04-26T19:05:52', 'uploader': 'EntityInfoUnittest', 'name': 'entityinfo_unittest_folder', 'time_created': '2021-04-26T19:05:52', 'project_code': 'unittest_entity_info_files_meta', 'tags': []}, {'id': 8617, 'labels': ['File', 'Greenroom'], 'global_entity_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'input_file_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:52', 'project_id': 8611, 'uploader': 'unittest', 'process_pipeline': 'raw', 'parent_folder_geid': 'None', 'namespace': 'greenroom', 'name': 'entity_info_meta_test_2', 'time_created': '2021-04-26T19:05:52', 'guid': 'unittest_guid', 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_2', 'generate_id': 'undefined'}, {'id': 8613, 'labels': ['File', 'Greenroom'], 'global_entity_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'input_file_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:51', 'project_id': 8611, 'uploader': 'unittest', 'process_pipeline': 'raw', 'parent_folder_geid': 'None', 'namespace': 'greenroom', 'name': 'entity_info_meta_test_1', 'time_created': '2021-04-26T19:05:51', 'guid': 'unittest_guid', 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_1', 'generate_id': 'undefined'}, {'id': 8627, 'labels': ['File', 'Greenroom'], 'global_entity_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'input_file_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:52', 'project_id': 8611, 'process_pipeline': 'raw', 'uploader': 'unittest', 'parent_folder_geid': 'None', 'namespace': 'greenroom', 'name': 'entity_info_folder_file_meta_1', 'time_created': '2021-04-26T19:05:52', 'guid': 'unittest_guid', 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_folder_file_meta_1', 'generate_id': 'undefined'}], 'routing': []}}
+2021-04-26 15:05:47 INFO     
+
+2021-04-26 15:05:47 INFO     -------------------------------02 test get_files--------------------------------
+2021-04-26 15:05:47 INFO     <Response [200]>
+2021-04-26 15:05:47 INFO     Result: {'code': 200, 'error_msg': '', 'page': 1, 'total': 5, 'num_of_pages': 5, 'result': {'data': [{'id': 8623, 'labels': ['File', 'VRECore'], 'global_entity_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'input_file_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/vre-data/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:51', 'project_id': 8611, 'uploader': 'unittest', 'process_pipeline': 'raw', 'parent_folder_geid': 'None', 'namespace': 'vrecore', 'name': 'entity_info_meta_test_3', 'time_created': '2021-04-26T19:05:51', 'guid': 'unittest_guid', 'full_path': '/vre-data/unittest_entity_info_files_meta/None/entity_info_meta_test_3', 'generate_id': 'undefined'}], 'routing': []}}
+2021-04-26 15:05:47 INFO     
+
+2021-04-26 15:05:47 INFO     ----------------------------03 test get_files_query-----------------------------
+2021-04-26 15:05:48 INFO     <Response [200]>
+2021-04-26 15:05:48 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {'data': [{'id': 8613, 'labels': ['File', 'Greenroom'], 'global_entity_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'input_file_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:51', 'project_id': 8611, 'uploader': 'unittest', 'process_pipeline': 'raw', 'parent_folder_geid': 'None', 'namespace': 'greenroom', 'name': 'entity_info_meta_test_1', 'time_created': '2021-04-26T19:05:51', 'guid': 'unittest_guid', 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_1', 'generate_id': 'undefined'}], 'routing': []}}
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     --------------------------04 test get_files_order_type--------------------------
+2021-04-26 15:05:48 INFO     <Response [400]>
+2021-04-26 15:05:48 INFO     {'code': 400, 'error_msg': 'Invalid order_type', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {}}
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     -------------------------05 test get_files_missing_zone-------------------------
+2021-04-26 15:05:48 INFO     {'detail': [{'loc': ['query', 'zone'], 'msg': 'field required', 'type': 'value_error.missing'}]}
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     ----------------------------06 test get_folder_files----------------------------
+2021-04-26 15:05:48 INFO     <Response [200]>
+2021-04-26 15:05:48 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 1, 'num_of_pages': 1, 'result': {'data': [{'id': 8627, 'labels': ['File', 'Greenroom'], 'global_entity_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'input_file_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:52', 'project_id': 8611, 'process_pipeline': 'raw', 'uploader': 'unittest', 'parent_folder_geid': 'None', 'namespace': 'greenroom', 'name': 'entity_info_folder_file_meta_1', 'time_created': '2021-04-26T19:05:52', 'guid': 'unittest_guid', 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_folder_file_meta_1', 'generate_id': 'undefined'}], 'routing': [{'id': 8611, 'labels': ['Dataset'], 'global_entity_id': '7d3c25ae-b21d-4406-bff7-1971d8dfffad-1619463951', 'path': 'unittest_entity_info_files_meta', 'code': 'unittest_entity_info_files_meta', 'time_lastmodified': '2021-04-26T19:05:51', 'discoverable': 'true', 'name': 'EntityInfoUnitTest', 'time_created': '2021-04-26T19:05:51', 'description': 'Project created by unit test, will be deleted soon...', 'type': 'Usecase', 'tags': ['test']}, {'id': 8626, 'labels': ['Greenroom', 'Folder'], 'global_entity_id': 'entity_info_meta_test_geid', 'folder_level': 0, 'list_priority': 10, 'folder_relative_path': '', 'time_lastmodified': '2021-04-26T19:05:52', 'uploader': 'EntityInfoUnittest', 'name': 'entityinfo_unittest_folder', 'time_created': '2021-04-26T19:05:52', 'project_code': 'unittest_entity_info_files_meta', 'tags': []}]}}
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     ------------------07 test get_folder_files_missing_source_type------------------
+2021-04-26 15:05:48 INFO     <Response [422]>
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     -----------------------08 test get_folder_files_bad_order-----------------------
+2021-04-26 15:05:48 INFO     <Response [400]>
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     -----------------------08 test get_folder_files_bad_order-----------------------
+2021-04-26 15:05:48 INFO     <Response [400]>
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     ------------------07 test get_folder_files_missing_source_type------------------
+2021-04-26 15:05:48 INFO     <Response [400]>
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     -----------------------07 test get_folder_files_bad_zone------------------------
+2021-04-26 15:05:48 INFO     <Response [400]>
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     ----------------------------06 test get_folder_files----------------------------
+2021-04-26 15:05:48 INFO     <Response [200]>
+2021-04-26 15:05:48 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 3, 'num_of_pages': 1, 'result': {'data': [{'id': 8623, 'labels': ['File', 'VRECore'], 'global_entity_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'input_file_id': '5c05d710-9064-4301-ba90-9e50fb1f7f22-1619463951', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/vre-data/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:51', 'project_id': 8611, 'uploader': 'unittest', 'process_pipeline': 'raw', 'parent_folder_geid': 'None', 'namespace': 'vrecore', 'name': 'entity_info_meta_test_3', 'time_created': '2021-04-26T19:05:51', 'guid': 'unittest_guid', 'full_path': '/vre-data/unittest_entity_info_files_meta/None/entity_info_meta_test_3', 'generate_id': 'undefined'}, {'id': 8617, 'labels': ['File', 'Greenroom'], 'global_entity_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'input_file_id': '9db14341-82da-424f-afca-d8f3268ade05-1619463951', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:52', 'project_id': 8611, 'uploader': 'unittest', 'process_pipeline': 'raw', 'parent_folder_geid': 'None', 'namespace': 'greenroom', 'name': 'entity_info_meta_test_2', 'time_created': '2021-04-26T19:05:52', 'guid': 'unittest_guid', 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_2', 'generate_id': 'undefined'}, {'id': 8613, 'labels': ['File', 'Greenroom'], 'global_entity_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'input_file_id': '5b2652d7-d6bd-4111-8a05-7b3a06cf8cef-1619463951', 'project_code': 'unittest_entity_info_files_meta', 'operator': 'entity_info_unittest', 'file_size': 1000, 'tags': ['tag1', 'tag2'], 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'time_lastmodified': '2021-04-26T19:05:51', 'project_id': 8611, 'uploader': 'unittest', 'process_pipeline': 'raw', 'parent_folder_geid': 'None', 'namespace': 'greenroom', 'name': 'entity_info_meta_test_1', 'time_created': '2021-04-26T19:05:51', 'guid': 'unittest_guid', 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_meta_test_1', 'generate_id': 'undefined'}], 'routing': []}}
+2021-04-26 15:05:48 INFO     
+
+2021-04-26 15:05:48 INFO     ----------------------------06 test get_folder_files----------------------------
+2021-04-26 15:05:49 INFO     <Response [200]>
+2021-04-26 15:05:49 INFO     {'code': 200, 'error_msg': '', 'page': 0, 'total': 0, 'num_of_pages': 0, 'result': {'data': [], 'routing': []}}
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     START TEAR DOWN PROCESS
+2021-04-26 15:05:49 INFO     File ID: [8613, 8623, 8617]
+2021-04-26 15:05:49 INFO     File GUID: ['unittest_guid', 'unittest_guid', 'unittest_guid', {'id': 8627, 'labels': ['File', 'Greenroom'], 'name': 'entity_info_folder_file_meta_1', 'time_created': '2021-04-26T19:05:52', 'time_lastmodified': '2021-04-26T19:05:52', 'file_size': 1000, 'full_path': '/data/vre-storage/unittest_entity_info_files_meta/None/entity_info_folder_file_meta_1', 'path': '/data/vre-storage/unittest_entity_info_files_meta/None', 'generate_id': 'undefined', 'guid': 'unittest_guid', 'namespace': 'greenroom', 'uploader': 'unittest', 'project_id': 8611, 'input_file_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'process_pipeline': 'raw', 'operator': 'entity_info_unittest', 'tags': ['tag1', 'tag2'], 'global_entity_id': 'f010b7fa-6bf3-4461-8c4e-d1319f932040-1619463952', 'parent_folder_geid': 'None', 'project_code': 'unittest_entity_info_files_meta'}]
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     Preparing delete file node------------------------------------------------------
+2021-04-26 15:05:49 INFO     DELETE STATUS: 200
+2021-04-26 15:05:49 INFO     DELETE RESPONSE: "success"
+
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     Preparing delete file node------------------------------------------------------
+2021-04-26 15:05:49 INFO     DELETE STATUS: 200
+2021-04-26 15:05:49 INFO     DELETE RESPONSE: "success"
+
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     Preparing delete file node------------------------------------------------------
+2021-04-26 15:05:49 INFO     DELETE STATUS: 200
+2021-04-26 15:05:49 INFO     DELETE RESPONSE: "success"
+
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     Preparing delete file entity----------------------------------------------------
+2021-04-26 15:05:49 INFO     DELETE STATUS: 200
+2021-04-26 15:05:49 INFO     DELETE RESPONSE: {"result": {}}
+
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     Preparing delete file entity----------------------------------------------------
+2021-04-26 15:05:49 INFO     DELETE STATUS: 200
+2021-04-26 15:05:49 INFO     DELETE RESPONSE: {"result": {}}
+
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     Preparing delete file entity----------------------------------------------------
+2021-04-26 15:05:49 INFO     DELETE STATUS: 200
+2021-04-26 15:05:49 INFO     DELETE RESPONSE: {"result": {}}
+
+2021-04-26 15:05:49 INFO     
+
+2021-04-26 15:05:49 INFO     Preparing delete file entity----------------------------------------------------
+2021-04-26 15:05:50 INFO     DELETE STATUS: 404
+2021-04-26 15:05:50 INFO     DELETE RESPONSE: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+
+2021-04-26 15:05:50 INFO     
+
+2021-04-26 15:05:50 INFO     Preparing delete project--------------------------------------------------------
+2021-04-26 15:05:50 INFO     DELETE Project: 8611
+2021-04-26 15:05:50 INFO     DELETE STATUS: 200
+2021-04-26 15:05:50 INFO     DELETE RESPONSE: "success"
+
+2021-04-26 15:05:50 INFO     
+
+2021-04-26 15:05:50 INFO     Preparing delete folder node----------------------------------------------------
+2021-04-26 15:05:50 INFO     DELETE STATUS: 200
+2021-04-26 15:05:50 INFO     DELETE RESPONSE: "success"
+

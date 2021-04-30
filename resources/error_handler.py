@@ -2,7 +2,7 @@ import enum
 from models.base_models import APIResponse, EAPIResponseCode
 from functools import wraps
 from requests import Response
-from commons.logger_services.logger_factory_service import SrvLoggerFactory
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
 
 _logger = SrvLoggerFactory('internal_error').get_logger()
 
