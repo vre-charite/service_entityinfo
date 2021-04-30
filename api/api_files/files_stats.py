@@ -5,7 +5,7 @@ import models.files as files_models
 import models.project as project_models
 from resources.error_handler import catch_internal
 from resources.helpers import get_operation_logs_total, get_file_count_neo4j
-from commons.logger_services.logger_factory_service import SrvLoggerFactory
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
 from config import ConfigClass
 import requests
 import math
