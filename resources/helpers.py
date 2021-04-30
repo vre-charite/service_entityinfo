@@ -65,7 +65,7 @@ def get_operation_logs_total(project_code, action,
             response.status_code, url))
 
 def get_file_count_neo4j(project_code, zone, archived=False, uploader=None):
-    url = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/quick/count"
+    url = ConfigClass.NEO4J_HOST + "/v1/neo4j/file/quick/count"
     labels = {
         "Greenroom": "Greenroom:File",
         "VRECore": "VRECore:File"
