@@ -4,7 +4,7 @@ from models import files as models
 from models.base_models import EAPIResponseCode
 from models import folders as folder_models
 from resources.error_handler import catch_internal
-from commons.logger_services.logger_factory_service import SrvLoggerFactory
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
 from config import ConfigClass
 import requests
 import math

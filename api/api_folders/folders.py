@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
-from commons.logger_services.logger_factory_service import SrvLoggerFactory
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
 from models import folders as models
 from models.base_models import EAPIResponseCode
 from models.meta import get_parent_connections
