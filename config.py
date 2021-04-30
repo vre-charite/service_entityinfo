@@ -18,3 +18,4 @@ class ConfigClass(object):
         NEO4J_HOST = "http://neo4j.utility:5062"
         PROVENANCE_SERVICE = "http://provenance.utility:5077"
         UTILITY_SERVICE = "http://common.utility:5062"
+
