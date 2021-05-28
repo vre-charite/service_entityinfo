@@ -34,7 +34,7 @@ class DatasetFileQueryV2:
             return api_response.json_response()
 
         try:
-            response = requests.get(ConfigClass.NEO4J_HOST + f"/v1/neo4j/nodes/Dataset/node/{dataset_id}")
+            response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/node/{dataset_id}")
             if response.status_code != 200:
                 error_msg = response.json()
                 api_response.code = EAPIResponseCode.internal_error
@@ -63,7 +63,7 @@ class DatasetFileQueryV2:
             },
         }
         try:
-            response = requests.post(ConfigClass.NEO4J_HOST + "/v2/neo4j/relations/query", json=relation_payload)
+            response = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=relation_payload)
             if response.status_code != 200:
                 error_msg = response.json()
                 api_response.code = EAPIResponseCode.internal_error
@@ -122,7 +122,7 @@ class FolderFileQueryV2:
                 "end_params": query, 
             },
         }
-        response = requests.post(ConfigClass.NEO4J_HOST + "/v2/neo4j/relations/query", json=relation_payload)
+        response = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=relation_payload)
         nodes = response.json()
 
         total = response.json()["total"]

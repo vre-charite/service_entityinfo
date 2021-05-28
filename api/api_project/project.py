@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
 from models import project as models
+from models.project import http_query_node
 from models.base_models import EAPIResponseCode
 from config import ConfigClass
 import requests
@@ -14,14 +15,14 @@ class FileCheck:
                 response_model=models.CheckFileResponse,
                 tags=["File Check"],
                 summary="Check file exists")
-    async def get(self, project_code, zone, type, filename, job_type):
+    async def get(self, project_code, zone, type, file_relative_path):
         """
         Check if file exists in given project,
         if file in a particular folder, could use folder in type
         e.g. type_name='processed/straight_copy'
         """
         api_response = models.CheckFileResponse()
-        url = ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/query"
+        url = ConfigClass.NEO4J_SERVICE_V2 + "nodes/query"
         data_type = type.split('/')[0]
         if 'raw' != data_type and 'processed' != data_type:
             api_response.code = EAPIResponseCode.bad_request
@@ -29,35 +30,41 @@ class FileCheck:
             return api_response.json_response()
         if zone.lower() == 'greenroom':
             zone = 'Greenroom'
+            full_path = ConfigClass.NFS_ROOT_PATH + f'/{project_code}/raw/{file_relative_path}'
         elif zone.lower() == 'vrecore':
             zone = 'VRECore'
+            full_path = ConfigClass.VRE_ROOT_PATH + f'/{project_code}/{file_relative_path}'
         else:
             api_response.code = EAPIResponseCode.bad_request
             api_response.error_msg = "Invalid zone"
             return api_response.json_response()
-        file_label = 'File' if job_type == 'AS_FILE' else 'Folder'
-        data = {'end_params': {'name': filename},
-                'end_label': [file_label, zone],
-                'start_label': 'Dataset',
-                'start_params': {'code': project_code}}
+        data = {'query': {
+            "full_path": full_path,
+            "labels": ['File', zone]
+        }
+        }
         try:
             res = requests.post(url=url, json=data)
-            res = res.json()
+            res = res.json().get('result')
         except Exception as e:
             api_response.code = EAPIResponseCode.internal_error
             api_response.error_msg = str(e)
             return api_response.json_response()
-        if len(res) == 1:
+        if res:
             code = EAPIResponseCode.success
-            result = res[0]['end_node']
-        elif len(res) == 0:
+            result = res
+            error_msg = ''
+        elif not res:
             code = EAPIResponseCode.not_found
-            result = 'File not found'
+            error_msg = 'File not found'
+            result = res
         else:
             code = EAPIResponseCode.internal_error
-            result = res
+            result = res.json
+            error_msg = 'Internal Error'
         api_response.code = code
         api_response.result = result
+        api_response.error_msg = error_msg
         return api_response.json_response()
 
 

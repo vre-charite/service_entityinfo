@@ -44,7 +44,7 @@ def get_parent_connections(entity_geid):
     routing = []
     # get routing
     response_routing = requests.get(
-        ConfigClass.NEO4J_HOST + '/v1/neo4j/relations/connected/{}'.format(entity_geid))
+        ConfigClass.NEO4J_SERVICE + 'relations/connected/{}'.format(entity_geid))
     routing = []
     if response_routing.status_code == 200:
         routing = response_routing.json()['result']

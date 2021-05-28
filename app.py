@@ -1,7 +1,9 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_sqlalchemy import DBSessionMiddleware
 from api.routes import api_router
 from api.routes import api_router_v2
+from config import ConfigClass
 import uvicorn
 
 
@@ -11,6 +13,7 @@ app = FastAPI(
     docs_url="/v1/api-doc",
     version="0.3.0"
 )
+app.add_middleware(DBSessionMiddleware, db_url=ConfigClass.SQLALCHEMY_DATABASE_URI)
 app.add_middleware(
     CORSMiddleware,
     allow_origins="*",

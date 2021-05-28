@@ -15,7 +15,7 @@ async def jwt_required(request: Request):
     username: str = payload.get("preferred_username")
 
     # check if user is existed in neo4j
-    url = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/User/query"
+    url = ConfigClass.NEO4J_SERVICE + "nodes/User/query"
     res = requests.post(
         url=url,
         json={"name": username}

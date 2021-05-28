@@ -3,13 +3,15 @@ def get_source_label(source_type):
         "Project": "Dataset",
         "Folder": "Folder",
         "TrashFile": "Dataset",
+        "Collection": "VirtualFolder",
     }.get(source_type, "")
+
 
 def get_query_labels(zone, source_type):
     if not zone in ["Greenroom", "VRECore", "All"]:
         return False
 
-    label_list = [] 
+    label_list = []
     label = {
         "Greenroom": "Greenroom:",
         "VRECore": "VRECore:",
@@ -19,17 +21,21 @@ def get_query_labels(zone, source_type):
         if zone == "All":
             label_list.append("VRECore:TrashFile")
             label_list.append("Greenroom:TrashFile")
+            label_list.append("VRECore:Folder")
+            label_list.append("Greenroom:Folder")
         else:
             label_list.append(label + "TrashFile")
+            label_list.append(label + "Folder")
     else:
         label_list.append(label + "File")
         label_list.append(label + "Folder")
     return label_list
 
-def convert_query(labels, query, partial):
+
+def convert_query(labels, query, partial, source_type):
     filter_fields = {
         "File": ["name", "uploader", "archived"],
-        "Folder": ["name", "uploader", "folder_level"],
+        "Folder": ["name", "uploader", "folder_level", "archived"],
         "TrashFile": ["name", "uploader", "archived"],
     }
     neo4j_query = {}
@@ -41,9 +47,12 @@ def convert_query(labels, query, partial):
                 neo4j_query[label][key] = value
                 if key in partial:
                     if not neo4j_query[label].get("partial"):
-                        neo4j_query[label]["partial"] = [] 
+                        neo4j_query[label]["partial"] = []
                     neo4j_query[label]["partial"].append(key)
             elif key == "permissions_uploader":
                 if label != "VRECore:TrashFile":
                     neo4j_query[label]["uploader"] = value
+        if source_type == "TrashFile" and 'Folder' in label:
+            neo4j_query[label]["in_trashbin"] = True
+            del neo4j_query[label]['archived']
     return neo4j_query

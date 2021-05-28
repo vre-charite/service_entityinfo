@@ -3,6 +3,7 @@ import time
 from config import ConfigClass
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from fastapi_sqlalchemy import db
 from app import app
 from resources.helpers import get_geid
 
@@ -24,7 +25,7 @@ class SetUpTest:
     def create_project(self, code, discoverable='true'):
         self.log.info("\n")
         self.log.info("Preparing testing project".ljust(80, '-'))
-        testing_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Dataset"
+        testing_api = ConfigClass.NEO4J_SERVICE + "nodes/Dataset"
         params = {"name": "EntityInfoUnitTest",
                   "path": code,
                   "code": code,
@@ -50,7 +51,7 @@ class SetUpTest:
     def delete_project(self, node_id):
         self.log.info("\n")
         self.log.info("Preparing delete project".ljust(80, '-'))
-        delete_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Dataset/node/%s" % str(node_id)
+        delete_api = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/node/%s" % str(node_id)
         try:
             self.log.info(f"DELETE Project: {node_id}")
             delete_res = requests.delete(delete_api)
@@ -70,10 +71,10 @@ class SetUpTest:
         project_code = file_event.get('project_code')
         project_id = file_event.get('project_id')
         if namespace == 'vrecore':
-            path = f"/vre-data/{project_code}/{file_type}"
+            path = f"/vre-data/{project_code}"
         else:
             path = f"/data/vre-storage/{project_code}/{file_type}"
-        geid_res = requests.get(ConfigClass.UTILITY_SERVICE + "/v1/utility/id")
+        geid_res = requests.get(ConfigClass.UTILITY_SERVICE + "utility/id")
         self.log.info(f"Getting global entity ID: {geid_res.text}")
         global_entity_id = geid_res.json()['result']
         if namespace.lower() == 'vrecore':
@@ -99,7 +100,8 @@ class SetUpTest:
                       "project_code": project_code,
                       "extra_labels": [namespace_label]
                     }
-        testing_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/File"
+        testing_api = ConfigClass.NEO4J_SERVICE + "nodes/File"
+        self.log.info(f"File created in {path}")
         try:
             self.log.info(f'POST API: {testing_api}')
             self.log.info(f'POST payload: {payload}')
@@ -111,17 +113,17 @@ class SetUpTest:
             file_id = result.get('id')
             relation_payload = {"start_id": project_id,
                                 "end_id": file_id}
-            relation_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/own"
+            relation_api = ConfigClass.NEO4J_SERVICE + "relations/own"
             relation_res = requests.post(relation_api, json=relation_payload)
             self.log.info(f"Create relation res: {relation_res.text}")
 
             # get folder id by geid
             if file_event.get("parent_geid"):
                 folder_query = {"global_entity_id": file_event.get("parent_geid")}
-                response = requests.post(ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Folder/query", json=folder_query)
+                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Folder/query", json=folder_query)
                 folder_node = response.json()[0]
                 relation_payload = {"start_id": folder_node["id"], "end_id": file_id}
-                relation_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/relations/own"
+                relation_api = ConfigClass.NEO4J_SERVICE + "relations/own"
                 relation_res = requests.post(relation_api, json=relation_payload)
                 self.log.info(f"Create relation res: {relation_res.text}")
             return result
@@ -159,7 +161,7 @@ class SetUpTest:
     def delete_folder_node(self, node_id):
         self.log.info("\n")
         self.log.info("Preparing delete folder node".ljust(80, '-'))
-        delete_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Folder/node/%s" % str(node_id)
+        delete_api = ConfigClass.NEO4J_SERVICE + "nodes/Folder/node/%s" % str(node_id)
         try:
             delete_res = requests.delete(delete_api)
             self.log.info(f"DELETE STATUS: {delete_res.status_code}")
@@ -172,7 +174,7 @@ class SetUpTest:
     def delete_file_node(self, node_id):
         self.log.info("\n")
         self.log.info("Preparing delete file node".ljust(80, '-'))
-        delete_api = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/File/node/%s" % str(node_id)
+        delete_api = ConfigClass.NEO4J_SERVICE + "nodes/File/node/%s" % str(node_id)
         try:
             delete_res = requests.delete(delete_api)
             self.log.info(f"DELETE STATUS: {delete_res.status_code}")
@@ -195,5 +197,12 @@ class SetUpTest:
             self.log.info(f"PLEASE DELETE THE FILE MANUALLY WITH GUID: {guid}")
             raise e
 
-
+    def delete_workbench_records(self, project_geid):
+        response = self.app.get(f"/v1/{project_geid}/workbench")
+        if response.status_code != 200:
+            self.log.info("ERROR DELETING WORKBENCH SQL ENTRY")
+        for key, value in response.json().get("result").items():
+            id = value["id"]
+            response = self.app.delete(f"/v1/{project_geid}/workbench/{id}")
+        return
 

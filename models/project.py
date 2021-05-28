@@ -6,34 +6,38 @@ import requests
 
 class CheckFileResponse(APIResponse):
     result: dict = Field({}, example={
-        "code": 200,
-        "error_msg": "",
-        "page": 0,
-        "total": 1,
-        "num_of_pages": 1,
-        "result": {
-            "id": 2077,
-            "labels": [
-                "File",
-                "Greenroom",
-                "Raw"
-            ],
-            "global_entity_id": "file_data-2a7ea1d8-7dea-11eb-8428-be498ca98c54-1614973025",
-            "operator": "",
-            "file_size": 1048576,
-            "tags": [],
-            "archived": "false",
-            "path": "/data/vre-storage/mar04/raw",
-            "time_lastmodified": "2021-03-05T19:37:06",
-            "uploader": "admin",
-            "process_pipeline": "",
-            "name": "Testdateiäöüßs4",
-            "time_created": "2021-03-05T19:37:06",
-            "guid": "f91b258d-2f1d-409a-9551-91af8057e70e",
-            "full_path": "/data/vre-storage/mar04/raw/Testdateiäöüßs4",
-            "generate_id": "undefined"
-        }
-    }
+                "code": 200,
+                "error_msg": "",
+                "page": 0,
+                "total": 1,
+                "num_of_pages": 1,
+                "result": [
+                    {
+                        "id": 2942,
+                        "labels": [
+                            "File",
+                            "Greenroom"
+                        ],
+                        "global_entity_id": "77b04c69-e79d-4c63-a914-7942e1555ec3-1620825051",
+                        "project_code": "may511",
+                        "file_size": 1145,
+                        "operator": "admin",
+                        "tags": [],
+                        "archived": 'false',
+                        "list_priority": 20,
+                        "path": "/data/vre-storage/may511/raw/folders1",
+                        "time_lastmodified": "2021-05-12T13:10:52",
+                        "uploader": "admin",
+                        "process_pipeline": "",
+                        "parent_folder_geid": "c1c3766f-36bd-42db-8ca5-9040726cbc03-1620764271",
+                        "name": "test.zip",
+                        "time_created": "2021-05-12T13:10:52",
+                        "guid": "9fc4353b-c4d3-4d29-aa11-d04688f4abc7",
+                        "full_path": "/data/vre-storage/may511/raw/folders1/test.zip",
+                        "generate_id": "undefined"
+                    }
+                ]
+            }
     )
 
 
@@ -41,6 +45,6 @@ def http_query_node(query_params={}):
     payload = {
         **query_params
     }
-    node_query_url = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Dataset/query"
+    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
     response = requests.post(node_query_url, json=payload)
     return response

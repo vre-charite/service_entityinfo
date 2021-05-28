@@ -56,7 +56,7 @@ class FileMeta:
             api_response.error_msg = "Invalid zone"
             return api_response.json_response()
 
-        neo4j_query = convert_query(labels, query, partial)
+        neo4j_query = convert_query(labels, query, partial, source_type)
 
         relation_payload = {
             **page_kwargs,
@@ -68,7 +68,7 @@ class FileMeta:
             },
         }
         try:
-            response = requests.post(ConfigClass.NEO4J_HOST + "/v2/neo4j/relations/query", json=relation_payload)
+            response = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=relation_payload)
             if response.status_code != 200:
                 error_msg = response.json()
                 api_response.code = EAPIResponseCode.internal_error

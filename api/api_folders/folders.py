@@ -36,6 +36,8 @@ class FolderNodes:
             "vrecore": "VRECore",
             "greenroom": "Greenroom"
         }.get(request_payload.zone)
+        extra_labels = [namespace]
+        extra_labels += request_payload.extra_labels
         new_node = {
             "global_entity_id": request_payload.global_entity_id,
             "name": request_payload.folder_name,
@@ -44,15 +46,19 @@ class FolderNodes:
             "project_code": request_payload.project_code,
             "tags": request_payload.folder_tags,
             "list_priority": 10,
-            "extra_labels": [namespace],
+            "extra_labels": extra_labels,
             "uploader": request_payload.uploader,
+            "archived": False,
         }
+        is_trashbin_root = request_payload.extra_attrs.get('is_trashbin_root')
+        for k, v in request_payload.extra_attrs.items():
+            new_node[k] = v
         result_create_node = models.http_post_node(
             new_node, request_payload.global_entity_id)
         if result_create_node.status_code == 200:
             node_created = result_create_node.json()[0]
             # if not root node folder
-            if request_payload.folder_relative_path:
+            if request_payload.folder_relative_path and not is_trashbin_root:
                 models.link_folder_parent(
                     namespace, request_payload.folder_parent_geid, node_created['global_entity_id']
                 )
@@ -64,7 +70,7 @@ class FolderNodes:
             api_response.result = node_created
             return api_response.json_response()
         else:
-            raise("Create failed" + result_create_node.text)
+            raise(Exception("Create failed" + result_create_node.text))
 
     # Deprecated and has been merged into entity listing API
     @router.get('/folder/{geid}', response_model=models.FoldersGETResponse, summary="Folder Nodes Restful",
@@ -121,7 +127,7 @@ class FolderNodes:
 
         # get data
         response_query = requests.post(
-            ConfigClass.NEO4J_HOST + '/v2/neo4j/relations/query', json=query_payload)
+            ConfigClass.NEO4J_SERVICE_V2 + 'relations/query', json=query_payload)
         data = []
         if response_query.status_code == 200:
             data = response_query.json()['results']

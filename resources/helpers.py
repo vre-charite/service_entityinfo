@@ -8,7 +8,7 @@ def get_geid():
     http://10.3.7.222:5062/v1/utility/id?entity_type=data_upload
     '''
     url = ConfigClass.UTILITY_SERVICE + \
-        "/v1/utility/id"
+        "utility/id"
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()['result']
@@ -21,7 +21,7 @@ def get_operation_auditlogs(project_code, action,
     '''
     get operation auditlogs from service_provenance
     '''
-    url = ConfigClass.PROVENANCE_SERVICE + "/v1/audit-logs"
+    url = ConfigClass.PROVENANCE_SERVICE + "audit-logs"
     params = {
         "project_code": project_code,
         "action": action,
@@ -45,7 +45,7 @@ def get_operation_logs_total(project_code, action,
     '''
     get operation auditlogs total from service_provenance
     '''
-    url = ConfigClass.PROVENANCE_SERVICE + "/v1/audit-logs"
+    url = ConfigClass.PROVENANCE_SERVICE + "audit-logs"
     params = {
         "project_code": project_code,
         "action": action,
@@ -65,7 +65,7 @@ def get_operation_logs_total(project_code, action,
             response.status_code, url))
 
 def get_file_count_neo4j(project_code, zone, archived=False, uploader=None):
-    url = ConfigClass.NEO4J_HOST + "/v1/neo4j/file/quick/count"
+    url = ConfigClass.NEO4J_SERVICE + "file/quick/count"
     labels = {
         "Greenroom": "Greenroom:File",
         "VRECore": "VRECore:File"

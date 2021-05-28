@@ -20,6 +20,8 @@ class FoldersPOST(BaseModel):
     zone: str = "greenroom | vrecore"
     project_code: str
     folder_tags: List[str] = []
+    extra_labels: List[str] = []
+    extra_attrs: dict = {}
 
 
 class FoldersPOSTResponse(APIResponse):
@@ -198,7 +200,7 @@ def http_post_node(node_dict: dict, geid=None):
     '''
     if not geid:
         node_dict["global_entity_id"] = helpers.get_geid()
-    node_creation_url = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Folder"
+    node_creation_url = ConfigClass.NEO4J_SERVICE + "nodes/Folder"
     response = requests.post(node_creation_url, json=node_dict)
     return response
 
@@ -207,7 +209,7 @@ def http_query_node(namespace, query_params={}):
     payload = {
         **query_params
     }
-    node_query_url = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Folder/query"
+    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Folder/query"
     response = requests.post(node_query_url, json=payload)
     return response
 
@@ -238,8 +240,8 @@ def link_folder_parent(namespace, parent_folder_geid, child_folder_geid):
     child_folder_node = child_folder_node[0]
     relation_payload = {
         "start_id": parent_folder_node["id"], "end_id": child_folder_node["id"]}
-    response = requests.post(ConfigClass.NEO4J_HOST +
-                             "/v1/neo4j/relations/own", json=relation_payload)
+    response = requests.post(ConfigClass.NEO4J_SERVICE +
+                             "relations/own", json=relation_payload)
     if response.status_code // 100 == 2:
         return response
     else:
@@ -251,7 +253,7 @@ def link_project(namespace, project_code, child_folder_geid):
     payload = {
         "code": project_code
     }
-    project_node_query_url = ConfigClass.NEO4J_HOST + "/v1/neo4j/nodes/Dataset/query"
+    project_node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
     response_query_project = requests.post(
         project_node_query_url, json=payload)
     if not response_query_project.status_code == 200:
@@ -274,8 +276,8 @@ def link_project(namespace, project_code, child_folder_geid):
     child_folder_node = child_folder_node[0]
     relation_payload = {
         "start_id": project["id"], "end_id": child_folder_node["id"]}
-    response = requests.post(ConfigClass.NEO4J_HOST +
-                             "/v1/neo4j/relations/own", json=relation_payload)
+    response = requests.post(ConfigClass.NEO4J_SERVICE +
+                             "relations/own", json=relation_payload)
     if response.status_code // 100 == 2:
         return response
     else:
