@@ -23,7 +23,9 @@ class CreateFile:
     @catch_internal(_API_NAMESPACE)
     async def post(self, data: models.CreateFilePOST):
         api_response = models.CreateFilePOSTResponse()
+        self._logger.info(f"file data payload: {data}")
         full_path = data.full_path
+        original_geid = data.original_geid
         payload = data.__dict__.copy()
         self._logger.info(f"file payload: {payload}")
         payload["name"] = full_path.split("/")[-1]
@@ -137,6 +139,45 @@ class CreateFile:
 
         # Create entity in Elastic Search
         if process_pipeline != 'data_delete':
+            try:
+                if process_pipeline == 'data_transfer' and original_geid:
+                    file_response = requests.post(
+                        ConfigClass.NEO4J_SERVICE + "nodes/File/query", json={"global_entity_id": original_geid})
+                    gr_file_node = file_response.json()[0]
+                    self._logger.info(
+                        f"Greenroom File Node: {str(gr_file_node)}")
+                    if "manifest_id" in gr_file_node:
+                        manifest_id = gr_file_node['manifest_id']
+                        full_path = gr_file_node['full_path']
+
+                        attributes = []
+                        res = requests.get(ConfigClass.BFF_SERVICE +
+                                           '/data/manifest/{}'.format(manifest_id))
+                        if res.status_code == 200:
+                            manifest_data = res.json()
+                            manifest = manifest_data['result']
+                            sql_attributes = manifest['attributes']
+
+                            for sql_attribute in sql_attributes:
+                                attribute_value = gr_file_node.get(
+                                    "attr_" + sql_attribute['name'], "")
+
+                                if sql_attribute["type"] == 'multiple_choice':
+                                    attribute_value = []
+                                    attribute_value.append(gr_file_node.get(
+                                        "attr_" + sql_attribute['name'], ""))
+
+                                attributes.append({
+                                    "attribute_name": sql_attribute['name'],
+                                    "name": manifest['name'],
+                                    "value": attribute_value,
+                                })
+
+                        es_payload['attributes'] = attributes
+            except Exception as e:
+                self._logger.error(str(e))
+
+            self._logger.info("es_payload: " + str(es_payload))
             es_res = requests.post(
                 ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
             self._logger.info(f"Elastic Search Result: {es_res.json()}")

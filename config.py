@@ -11,6 +11,7 @@ class ConfigClass(object):
     UTILITY_SERVICE = "http://common.utility:5062/v1/"
     NFS_ROOT_PATH = "/data/vre-storage"
     VRE_ROOT_PATH = "/vre-data"
+    BFF_SERVICE = "http://bff.utility:5060/v1/"
     if env == 'test':
         NEO4J_SERVICE = "http://10.3.7.216:5062/v1/neo4j/"
         NEO4J_SERVICE_V2 = "http://10.3.7.216:5062/v2/neo4j/"
@@ -32,4 +33,3 @@ class ConfigClass(object):
     RDS_SCHEMA_DEFAULT = "indoc_vre"
 
     SQLALCHEMY_DATABASE_URI = f"postgresql://{RDS_USER}:{RDS_PWD}@{RDS_HOST}/{RDS_DBNAME}"
-

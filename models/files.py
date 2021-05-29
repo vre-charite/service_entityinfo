@@ -35,6 +35,7 @@ class CreateTrashPOSTResponse(APIResponse):
 class CreateFilePOST(BaseModel):
     file_size: int
     full_path: str
+    original_geid: str = None
     generate_id: str
     guid: str
     namespace: str
@@ -56,18 +57,18 @@ class CreateFilePOSTResponse(APIResponse):
         'full_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
         'generate_id': 'BCD-1234_2',
         'guid': '5321880a-1a41-4bc8-a5d5-9767323205792',
-                'id': 478,
-                'labels': ['VRECore', 'File', 'Processed'],
-                'name': 'BCD-1234_file_2.aacn',
-                'namespace': 'core',
-                'path': '/data/vre-storage/generate/raw',
-                'process_pipeline': 'greg_testing',
-                'time_created': '2021-01-06T18:02:55',
-                'time_lastmodified': '2021-01-06T18:02:55',
-                'type': 'processed',
-                'uploader': 'admin',
-                'operator': 'admin',
-                'tags': ['greg', 'test']
+        'id': 478,
+        'labels': ['VRECore', 'File', 'Processed'],
+        'name': 'BCD-1234_file_2.aacn',
+        'namespace': 'core',
+        'path': '/data/vre-storage/generate/raw',
+        'process_pipeline': 'greg_testing',
+        'time_created': '2021-01-06T18:02:55',
+        'time_lastmodified': '2021-01-06T18:02:55',
+        'type': 'processed',
+        'uploader': 'admin',
+        'operator': 'admin',
+        'tags': ['greg', 'test']
     }
     )
 
