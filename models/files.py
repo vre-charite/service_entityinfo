@@ -7,6 +7,7 @@ class CreateTrashPOST(BaseModel):
     full_path: str
     trash_full_path: str
     trash_geid: str = ""
+    geid: str = ""
 
 
 class CreateTrashPOSTResponse(APIResponse):
@@ -16,17 +17,17 @@ class CreateTrashPOSTResponse(APIResponse):
         'full_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
         'generate_id': 'BCD-1234_2',
         'guid': '5321880a-1a41-4bc8-a5d5-9767323205792',
-                'id': 478,
-                'labels': ['VRECore', 'TrashFile', 'Processed'],
-                'name': 'BCD-1234_file_2.aacn',
-                'namespace': 'core',
-                'path': '/data/vre-storage/generate/raw',
-                'process_pipeline': 'greg_testing',
-                'time_created': '2021-01-06T18:02:55',
-                'time_lastmodified': '2021-01-06T18:02:55',
-                'type': 'processed',
-                'uploader': 'admin',
-                'operator': 'admin'
+        'id': 478,
+        'labels': ['VRECore', 'TrashFile', 'Processed'],
+        'name': 'BCD-1234_file_2.aacn',
+        'namespace': 'core',
+        'path': '/data/vre-storage/generate/raw',
+        'process_pipeline': 'greg_testing',
+        'time_created': '2021-01-06T18:02:55',
+        'time_lastmodified': '2021-01-06T18:02:55',
+        'type': 'processed',
+        'uploader': 'admin',
+        'operator': 'admin'
     }
     )
 
@@ -40,7 +41,7 @@ class CreateFilePOST(BaseModel):
     guid: str
     namespace: str
     uploader: str
-    project_id: int
+    # project_id: int
     input_file_id: int = None
     process_pipeline: str = ""
     operator: str = ""
@@ -48,20 +49,24 @@ class CreateFilePOST(BaseModel):
     global_entity_id: str = ""
     parent_folder_geid: str = None
     project_code: str
+    # Minio attribute
+    location: str = ""
+    display_path: str = ""
+    version_id: str = ""
 
 
 class CreateFilePOSTResponse(APIResponse):
     result: dict = Field({}, example={
         'archived': False,
         'file_size': 1024,
-        'full_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
+        'display_path': '/data/vre-storage/generate/raw/BCD-1234_file_2.aacn',
         'generate_id': 'BCD-1234_2',
         'guid': '5321880a-1a41-4bc8-a5d5-9767323205792',
         'id': 478,
         'labels': ['VRECore', 'File', 'Processed'],
         'name': 'BCD-1234_file_2.aacn',
         'namespace': 'core',
-        'path': '/data/vre-storage/generate/raw',
+        'location': '/data/vre-storage/generate/raw',
         'process_pipeline': 'greg_testing',
         'time_created': '2021-01-06T18:02:55',
         'time_lastmodified': '2021-01-06T18:02:55',

@@ -1,52 +1,54 @@
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
 from models import project as models
-from models.project import http_query_node
 from models.base_models import EAPIResponseCode
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
 from config import ConfigClass
 import requests
 
 router = APIRouter()
+_API_NAMESPACE = "api_project"
 
 
 @cbv(router)
 class FileCheck:
+
+    def __init__(self):
+        self._logger = SrvLoggerFactory(_API_NAMESPACE).get_logger()
+
     @router.get('/{project_code}/file/exist',
                 response_model=models.CheckFileResponse,
                 tags=["File Check"],
                 summary="Check file exists")
-    async def get(self, project_code, zone, type, file_relative_path):
+    async def get(self, project_code, zone, file_relative_path):
         """
-        Check if file exists in given project,
-        if file in a particular folder, could use folder in type
-        e.g. type_name='processed/straight_copy'
+        Check if file exists in given project/folder
         """
+        self._logger.info("api_project_get".center(80, '-'))
         api_response = models.CheckFileResponse()
         url = ConfigClass.NEO4J_SERVICE_V2 + "nodes/query"
-        data_type = type.split('/')[0]
-        if 'raw' != data_type and 'processed' != data_type:
-            api_response.code = EAPIResponseCode.bad_request
-            api_response.error_msg = f"Invalid type {data_type}"
-            return api_response.json_response()
-        if zone.lower() == 'greenroom':
-            zone = 'Greenroom'
-            full_path = ConfigClass.NFS_ROOT_PATH + f'/{project_code}/raw/{file_relative_path}'
-        elif zone.lower() == 'vrecore':
-            zone = 'VRECore'
-            full_path = ConfigClass.VRE_ROOT_PATH + f'/{project_code}/{file_relative_path}'
-        else:
+        self._logger.info(f"Received info: project_code: {project_code}, zone: {zone}, "
+                          f"file_relative_path: {file_relative_path}")
+        zone = {"vrecore": "VRECore", "greenroom": "Greenroom"}.get(zone.lower(), '')
+        if not zone:
             api_response.code = EAPIResponseCode.bad_request
             api_response.error_msg = "Invalid zone"
             return api_response.json_response()
         data = {'query': {
-            "full_path": full_path,
+            "display_path": file_relative_path,
+            "project_code": project_code,
             "labels": ['File', zone]
         }
         }
+        self._logger.info(f"POST payload: {data}")
+        self._logger.info(f"POST url: {url}")
         try:
             res = requests.post(url=url, json=data)
+            self._logger.info(f"POST response: {res.text}")
             res = res.json().get('result')
+            self._logger.info(f"POST result: {res}")
         except Exception as e:
+            self._logger.error(f"POST ERROR: {str(e)}")
             api_response.code = EAPIResponseCode.internal_error
             api_response.error_msg = str(e)
             return api_response.json_response()

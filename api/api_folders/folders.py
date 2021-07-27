@@ -10,6 +10,8 @@ import requests
 import math
 import copy
 import json
+import os
+import time
 
 router = APIRouter()
 _API_NAMESPACE = "api_folder_nodes"
@@ -49,16 +51,54 @@ class FolderNodes:
             "extra_labels": extra_labels,
             "uploader": request_payload.uploader,
             "archived": False,
+            "display_path": os.path.join(request_payload.folder_relative_path,
+                                         request_payload.folder_name)
         }
+
+        # name folder do not need to be stored in es
+        if len(request_payload.folder_relative_path):
+            es_body = {
+                "global_entity_id": request_payload.global_entity_id,
+                "zone": namespace,
+                "data_type": "Folder",
+                "operator": request_payload.uploader,
+                "file_size": 0,
+                "tags": request_payload.folder_tags,
+                "archived": False,
+                "location": "",
+                "time_lastmodified": time.time(),
+                "process_pipeline": "",
+                "uploader": request_payload.uploader,
+                "file_name": request_payload.folder_name,
+                "time_created": time.time(),
+                "atlas_guid": "",
+                "display_path": os.path.join(request_payload.folder_relative_path,
+                                             request_payload.folder_name),
+                "generate_id": None,
+                "project_code": request_payload.project_code,
+                "priority": 10
+            }
+
+            es_res = requests.post(
+                ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_body)
+            if es_res.status_code != 200:
+                self._logger.error(
+                    f"Error while creating folder node in elastic search : {es_res.text}")
+                api_response.code = EAPIResponseCode.internal_error
+                api_response.result = "Error while creating folder node in elastic search"
+                return api_response.json_response()
+
         is_trashbin_root = request_payload.extra_attrs.get('is_trashbin_root')
         for k, v in request_payload.extra_attrs.items():
             new_node[k] = v
+        self._logger.info(
+            f" neo4j folder creation payload:  {new_node}")
         result_create_node = models.http_post_node(
             new_node, request_payload.global_entity_id)
         if result_create_node.status_code == 200:
             node_created = result_create_node.json()[0]
             # if not root node folder
-            if request_payload.folder_relative_path and not is_trashbin_root:
+            if request_payload.folder_relative_path and request_payload.folder_parent_geid and not is_trashbin_root:
                 models.link_folder_parent(
                     namespace, request_payload.folder_parent_geid, node_created['global_entity_id']
                 )
@@ -135,7 +175,6 @@ class FolderNodes:
             raise(Exception('[v2 query] {}, {}'.format(
                 response_query.status_code, response_query.text)))
 
-       
         total = int(response_query.json()["total"])
 
         # return response

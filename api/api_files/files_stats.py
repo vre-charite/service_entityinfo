@@ -46,7 +46,7 @@ class FilesStats:
             "file",
             operator=operator
         ) for operation_type in ["data_upload", "data_download", "data_transfer"]]
-        # get stags from neo4j count
+        # get stats from neo4j count
         stats_from_neo4j = [get_file_count_neo4j(
             project_info['code'],
             zone,

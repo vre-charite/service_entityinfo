@@ -1,8 +1,8 @@
 def get_source_label(source_type):
     return {
-        "Project": "Dataset",
+        "Project": "Container",
         "Folder": "Folder",
-        "TrashFile": "Dataset",
+        "TrashFile": "Container",
         "Collection": "VirtualFolder",
     }.get(source_type, "")
 
@@ -26,6 +26,10 @@ def get_query_labels(zone, source_type):
         else:
             label_list.append(label + "TrashFile")
             label_list.append(label + "Folder")
+    elif source_type == "Folder":
+        label_list.append(label + "File")
+        label_list.append(label + "Folder")
+        label_list.append(label + "TrashFile")
     else:
         label_list.append(label + "File")
         label_list.append(label + "Folder")
@@ -49,10 +53,12 @@ def convert_query(labels, query, partial, source_type):
                     if not neo4j_query[label].get("partial"):
                         neo4j_query[label]["partial"] = []
                     neo4j_query[label]["partial"].append(key)
-            elif key == "permissions_uploader":
+            elif key == "permissions_display_path":
                 if label != "VRECore:TrashFile":
-                    neo4j_query[label]["uploader"] = value
+                    neo4j_query[label]["display_path"] = value
+                    neo4j_query[label]["startswith"] = ["display_path"] 
         if source_type == "TrashFile" and 'Folder' in label:
             neo4j_query[label]["in_trashbin"] = True
-            del neo4j_query[label]['archived']
+            if neo4j_query[label].get('archived'):
+                del neo4j_query[label]['archived']
     return neo4j_query

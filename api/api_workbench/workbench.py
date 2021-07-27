@@ -62,7 +62,7 @@ class Workbench:
             api_response.code = EAPIResponseCode.internal_error
             return api_response.json_response()
 
-        response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/query", json={"global_entity_id": project_geid})
+        response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Container/query", json={"global_entity_id": project_geid})
         if response.status_code != 200:
             api_response.error_msg = response.json()
             api_response.code = response.status_code

@@ -9,6 +9,7 @@ from config import ConfigClass
 import requests
 import math
 import time
+import os
 
 router = APIRouter()
 _API_NAMESPACE = "file_entity_restful"
@@ -28,8 +29,8 @@ class CreateFile:
         original_geid = data.original_geid
         payload = data.__dict__.copy()
         self._logger.info(f"file payload: {payload}")
-        payload["name"] = full_path.split("/")[-1]
-        payload["path"] = "/".join(full_path.split("/")[:-1])
+        payload["name"] = os.path.basename(full_path)
+        payload["path"] = os.path.dirname(full_path)
         payload["archived"] = False
 
         process_pipeline = payload.get("process_pipeline", None)
@@ -41,7 +42,7 @@ class CreateFile:
             "file_size": payload["file_size"],
             "tags": payload["tags"],
             "archived": False,
-            "path": payload["path"],
+            "location": payload["location"],
             "time_lastmodified": time.time(),
             "process_pipeline": payload["process_pipeline"],
             "uploader": payload["uploader"],
@@ -49,12 +50,16 @@ class CreateFile:
             "time_created": time.time(),
             "atlas_guid": payload["guid"],
             "full_path": payload["full_path"],
+            "display_path": payload["display_path"],
             "generate_id": payload["generate_id"],
             "project_code": payload["project_code"],
             "list_priority": 20
         }
 
-        del payload["project_id"]
+        if 'version_id' in payload:
+            es_payload["version"] = payload["version_id"]
+
+        # del payload["project_id"]
 
         if data.input_file_id:
             del payload["input_file_id"]
@@ -111,8 +116,14 @@ class CreateFile:
                 api_response.error_msg = f"Neo4j error: {response.json()}"
                 return api_response.json_response()
         else:
-            # Create Dataset to file relation
-            relation_payload = {"start_id": data.project_id,
+            # Create Container to file relation
+            query_params = {
+                "code": data.project_code
+            }
+            container_id = get_container_id(query_params)
+            # relation_payload = {"start_id": data.project_id,
+            #                     "end_id": file_node["id"]}
+            relation_payload = {"start_id": container_id,
                                 "end_id": file_node["id"]}
             response = requests.post(
                 ConfigClass.NEO4J_SERVICE + "relations/own", json=relation_payload)
@@ -151,8 +162,10 @@ class CreateFile:
                         full_path = gr_file_node['full_path']
 
                         attributes = []
-                        res = requests.get(ConfigClass.BFF_SERVICE +
-                                           '/data/manifest/{}'.format(manifest_id))
+                        # res = requests.get(ConfigClass.BFF_SERVICE +
+                        #                    '/data/manifest/{}'.format(manifest_id))
+                        res = requests.get(
+                            ConfigClass.ENTITYINFO_SERVICE + f"manifest/{manifest_id}")
                         if res.status_code == 200:
                             manifest_data = res.json()
                             manifest = manifest_data['result']
@@ -192,8 +205,12 @@ class CreateFile:
 
 @cbv(router)
 class DatasetFileQuery:
-    @router.post('/{dataset_id}/query', response_model=models.DatasetFileQueryPOSTResponse, summary="Query on files by dataset")
-    async def post(self, dataset_id, data: models.DatasetFileQueryPOST):
+    # @router.post('/{dataset_id}/query', response_model=models.DatasetFileQueryPOSTResponse,
+    # summary="Query on files by dataset")
+    @router.post('/{project_geid}/query', response_model=models.DatasetFileQueryPOSTResponse,
+                 summary="Query on files by Container")
+    # async def post(self, dataset_id, data: models.DatasetFileQueryPOST):
+    async def post(self, project_geid, data: models.DatasetFileQueryPOST):
         api_response = models.DatasetFileQueryPOSTResponse()
         page = data.page
         page_size = data.page_size
@@ -217,13 +234,14 @@ class DatasetFileQuery:
 
         if not query:
             query = None
-
+        query_params = {"global_entity_id": project_geid}
+        container_id = get_container_id(query_params)
         relation_payload = {
             **page_kwargs,
             "label": "own",
-            "start_label": "Dataset",
+            "start_label": "Container",
             "end_label": labels,
-            "start_params": {"id": int(dataset_id)},
+            "start_params": {"id": int(container_id)},
             "end_params": query,
             "partial": data.partial
         }
@@ -251,15 +269,20 @@ class TrashCreate:
         api_response = models.CreateTrashPOSTResponse()
         full_path = data.full_path
         trash_full_path = data.trash_full_path
-        name = trash_full_path.split("/")[-1]
-        trash_path = "/".join(trash_full_path.split("/")[:-1])
+        name = os.path.basename(trash_full_path)
+        trash_path = os.path.dirname(trash_full_path)
 
-        self._logger.info('full_path: ' + full_path)
+        self._logger.info('global_entity_id: ' + data.geid)
 
         # Get existing File
-        response = requests.post(
-            ConfigClass.NEO4J_SERVICE + "nodes/File/query", json={"full_path": data.full_path})
-        file_node = response.json()[0]
+        if data.geid:
+            response = requests.post(
+                ConfigClass.NEO4J_SERVICE + "nodes/File/query", json={"global_entity_id": data.geid})
+            file_node = response.json()[0]
+        else:
+            response = requests.post(
+                ConfigClass.NEO4J_SERVICE + "nodes/File/query", json={"full_path": data.full_path})
+            file_node = response.json()[0]
 
         labels = file_node.get("labels")
         labels.remove("File")
@@ -295,8 +318,8 @@ class TrashCreate:
         response = requests.get(get_connected)
         connected_nodes = response.json()['result']
         dataset = [
-            connected for connected in connected_nodes if 'Dataset' in connected['labels']][0]
-        dataset_id = dataset["id"]
+            connected for connected in connected_nodes if 'Container' in connected['labels']][0]
+        container_id = dataset["id"]
 
         # Create File to TrashFile relation
         relation_payload = {
@@ -304,8 +327,9 @@ class TrashCreate:
             "properties": {"operator": file_node.get("operator")}}
         response = requests.post(
             ConfigClass.NEO4J_SERVICE + "relations/deleted", json=relation_payload)
-        # Create Dataset to file relation
-        relation_payload = {"start_id": dataset_id, "end_id": trash_file["id"]}
+        # Create Container to file relation
+        relation_payload = {"start_id": container_id,
+                            "end_id": trash_file["id"]}
         response = requests.post(
             ConfigClass.NEO4J_SERVICE + "relations/own", json=relation_payload)
 
@@ -333,3 +357,16 @@ class TrashCreate:
             return api_response.json_response()
 
         return api_response.json_response()
+
+
+def get_container_id(query_params):
+    url = ConfigClass.NEO4J_SERVICE + f"nodes/Container/query"
+    payload = {
+        **query_params
+    }
+    result = requests.post(url, json=payload)
+    if result.status_code != 200 or result.json() == []:
+        return None
+    result = result.json()[0]
+    container_id = result["id"]
+    return container_id

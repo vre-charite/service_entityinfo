@@ -45,6 +45,6 @@ def http_query_node(query_params={}):
     payload = {
         **query_params
     }
-    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
+    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query"
     response = requests.post(node_query_url, json=payload)
     return response

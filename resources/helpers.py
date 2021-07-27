@@ -76,7 +76,8 @@ def get_file_count_neo4j(project_code, zone, archived=False, uploader=None):
         'archived': '[bool]True' if archived else '[bool]False'
     }
     if uploader:
-        params["uploader"] = uploader
+        params["display_path"] = uploader
+        params["startwith"] = ["display_path"]
     response = requests.get(url, params=params)
     if response.status_code == 200:
         return response.json()['result']

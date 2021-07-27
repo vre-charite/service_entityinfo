@@ -2,6 +2,7 @@ import unittest
 from tests.logger import Logger
 from tests.prepare_test import SetUpTest
 
+
 class TestFileMetaCheck(unittest.TestCase):
     log = Logger(name='test_meta_api.log')
     test = SetUpTest(log)
@@ -88,6 +89,7 @@ class TestFileMetaCheck(unittest.TestCase):
         try:
             geid = self.container["global_entity_id"]
             result = self.app.get(f"/v1/files/meta/{geid}", params=data)
+            self.log.info("container geid: {}".format(geid))
             self.log.info(result)
             self.assertEqual(result.status_code, 200)
             res = result.json()

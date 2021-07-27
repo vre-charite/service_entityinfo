@@ -2,7 +2,7 @@ import unittest
 from tests.logger import Logger
 from tests.prepare_test import SetUpTest, SetupException
 
-@unittest.skip('notsure why failed')
+
 class TestProjectFileCheck(unittest.TestCase):
     log = Logger(name='test_project_api.log')
     test = SetUpTest(log)
@@ -16,14 +16,13 @@ class TestProjectFileCheck(unittest.TestCase):
     def setUpClass(cls):
         cls.log = cls.test.log
         cls.app = cls.test.app
-        raw_file_event = {'filename': 'entity_info_test_1',
+        raw_file_event = {'filename': 'admin/entity_info_test_1',
                           'namespace': 'greenroom',
-                          'project_code': cls.project_code,
-                          'file_type': 'raw'}
+                          'project_code': cls.project_code}
 
         core_file_event = raw_file_event.copy()
         core_file_event['namespace'] = 'vrecore'
-        core_file_event['filename'] = 'entity_info_test_3'
+        core_file_event['filename'] = 'admin/entity_info_test_3'
         try:
             cls.container_id = cls.test.create_project(cls.project_code).get('id')
             cls.log.info(f"project ID: {cls.container_id}")
@@ -70,9 +69,8 @@ class TestProjectFileCheck(unittest.TestCase):
         self.log.info("01 test get_raw_file".center(80, '-'))
         test_api = f'/v1/project/{self.project_code}/file/exist'
         data = {
-            "type": "raw",
             "zone": "greenroom",
-            "file_relative_path": "entity_info_test_1"
+            "file_relative_path": "admin/entity_info_test_1"
         }
         try:
             result = self.app.get(test_api, params=data)
@@ -91,9 +89,8 @@ class TestProjectFileCheck(unittest.TestCase):
         self.log.info("03 test get_vre_core_file".center(80, '-'))
         test_api = f'/v1/project/{self.project_code}/file/exist'
         data = {
-            "type": "raw",
             "zone": "vrecore",
-            "file_relative_path": "entity_info_test_3"
+            "file_relative_path": "admin/entity_info_test_3"
         }
         try:
             self.log.info(f"PAYLOAD: {data}")
@@ -113,9 +110,8 @@ class TestProjectFileCheck(unittest.TestCase):
         self.log.info("04 test non_exist_file".center(80, '-'))
         test_api = f'/v1/project/{self.project_code}/file/exist'
         data = {
-            "type": "raw",
             "zone": "vrecore",
-            "file_relative_path": "entity_info_test_3333"
+            "file_relative_path": "admin/entity_info_test_3333"
         }
         try:
             result = self.app.get(test_api, params=data)
@@ -132,42 +128,14 @@ class TestProjectFileCheck(unittest.TestCase):
             self.log.error(e)
             raise e
 
-    def test_05_get_file_with_wrong_type(self):
-        self.log.info("\n")
-        self.log.info("05 test get_file_with_wrong_type".center(80, '-'))
-        test_api = f'/v1/project/{self.project_code}/file/exist'
-        wrong_type = "faketype"
-        data = {
-            "type": wrong_type,
-            "zone": "greenroom",
-            "file_relative_path": "entity_info_test_1"
-        }
-        try:
-            result = self.app.get(test_api, params=data)
-            self.log.info(result)
-            self.log.info(f"COMPARING CODE: {result.status_code} VS 400")
-            self.assertEqual(result.status_code, 400)
-            res = result.json()
-            self.log.info(res)
-            res_error = res.get('error_msg')
-            self.log.info(f"COMPARING error_msg: {res_error} VS Invalid type {wrong_type}")
-            self.assertEqual(res_error, f'Invalid type {wrong_type}')
-            res_result = res.get('result')
-            self.log.info(f"COMPARING result: {res_result} VS {''}")
-            self.assertEqual(res_result, {})
-        except Exception as e:
-            self.log.error(e)
-            raise e
-
     def test_06_get_with_wrong_zone(self):
         self.log.info("\n")
         self.log.info("06 test get_file_with_wrong_zone".center(80, '-'))
         test_api = f'/v1/project/{self.project_code}/file/exist'
         wrong_zone = "fakezone"
         data = {
-            "type": 'raw',
             "zone": wrong_zone,
-            "file_relative_path": "entity_info_test_1"
+            "file_relative_path": "admin/entity_info_test_1"
         }
         try:
             result = self.app.get(test_api, params=data)

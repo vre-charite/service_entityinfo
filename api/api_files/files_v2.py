@@ -10,8 +10,11 @@ router = APIRouter()
 
 @cbv(router)
 class DatasetFileQueryV2:
-    @router.post('/{dataset_id}/query', response_model=models.DatasetFileQueryPOSTResponse, summary="Query on files by dataset")
-    async def post(self, dataset_id, data: models.DatasetFileQueryPOSTV2):
+    # @router.post('/{dataset_id}/query', response_model=models.DatasetFileQueryPOSTResponse, summary="Query on files by dataset")
+    @router.post('/{project_geid}/query', response_model=models.DatasetFileQueryPOSTResponse,
+                 summary="Query on files by dataset")
+    # async def post(self, dataset_id, data: models.DatasetFileQueryPOSTV2):
+    async def post(self, project_geid, data: models.DatasetFileQueryPOSTV2):
         api_response = models.DatasetFileQueryPOSTResponse()
         page = data.page
         page_size = data.page_size
@@ -34,7 +37,11 @@ class DatasetFileQueryV2:
             return api_response.json_response()
 
         try:
-            response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/node/{dataset_id}")
+            query_params ={
+                "global_entity_id": project_geid
+            }
+            container_id = get_container_id(query_params)
+            response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/Container/node/{container_id}")
             if response.status_code != 200:
                 error_msg = response.json()
                 api_response.code = EAPIResponseCode.internal_error
@@ -55,7 +62,7 @@ class DatasetFileQueryV2:
 
         relation_payload = {
             **page_kwargs,
-            "start_label": "Dataset",
+            "start_label": "Container",
             "end_labels": labels,
             "query": {
                 "start_params": {"code": dataset["code"]}, 
@@ -131,3 +138,16 @@ class FolderFileQueryV2:
         api_response.page = page 
         api_response.num_of_pages = math.ceil(total / page_size) 
         return api_response.json_response()
+
+
+def get_container_id(query_params):
+    url = ConfigClass.NEO4J_SERVICE + f"nodes/Container/query"
+    payload = {
+        **query_params
+    }
+    result = requests.post(url, json=payload)
+    if result.status_code != 200 or result.json() == []:
+        return None
+    result = result.json()[0]
+    container_id = result["id"]
+    return str(container_id)

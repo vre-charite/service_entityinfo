@@ -25,8 +25,8 @@ class SetUpTest:
     def create_project(self, code, discoverable='true'):
         self.log.info("\n")
         self.log.info("Preparing testing project".ljust(80, '-'))
-        testing_api = ConfigClass.NEO4J_SERVICE + "nodes/Dataset"
-        params = {"name": "EntityInfoUnitTest",
+        testing_api = ConfigClass.NEO4J_SERVICE + "nodes/Container"
+        params = {"name": "EntityInfoUnitTest1",
                   "path": code,
                   "code": code,
                   "description": "Project created by unit test, will be deleted soon...",
@@ -51,7 +51,7 @@ class SetUpTest:
     def delete_project(self, node_id):
         self.log.info("\n")
         self.log.info("Preparing delete project".ljust(80, '-'))
-        delete_api = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/node/%s" % str(node_id)
+        delete_api = ConfigClass.NEO4J_SERVICE + "nodes/Container/node/%s" % str(node_id)
         try:
             self.log.info(f"DELETE Project: {node_id}")
             delete_res = requests.delete(delete_api)
@@ -66,14 +66,9 @@ class SetUpTest:
         self.log.info("\n")
         self.log.info("Creating testing file".ljust(80, '-'))
         filename = file_event.get('filename')
-        file_type = file_event.get('file_type')
         namespace = file_event.get('namespace')
         project_code = file_event.get('project_code')
         project_id = file_event.get('project_id')
-        if namespace == 'vrecore':
-            path = f"/vre-data/{project_code}"
-        else:
-            path = f"/data/vre-storage/{project_code}/{file_type}"
         geid_res = requests.get(ConfigClass.UTILITY_SERVICE + "utility/id")
         self.log.info(f"Getting global entity ID: {geid_res.text}")
         global_entity_id = geid_res.json()['result']
@@ -83,8 +78,8 @@ class SetUpTest:
             namespace_label = 'Greenroom'
         payload = {
                       "file_size": 1000,
-                      "full_path": path + '/' + filename,
-                      "path": path,
+                      "display_path": filename,
+                      "location": f"minio://http://unittest/{project_code}/{filename}",
                       "generate_id": "undefined",
                       "guid": "unittest_guid",
                       "namespace": namespace,
@@ -101,7 +96,7 @@ class SetUpTest:
                       "extra_labels": [namespace_label]
                     }
         testing_api = ConfigClass.NEO4J_SERVICE + "nodes/File"
-        self.log.info(f"File created in {path}")
+        self.log.info(f"File create payload {payload}")
         try:
             self.log.info(f'POST API: {testing_api}')
             self.log.info(f'POST payload: {payload}')

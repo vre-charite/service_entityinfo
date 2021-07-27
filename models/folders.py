@@ -4,6 +4,9 @@ from typing import List, Optional
 from resources import helpers
 import requests
 from config import ConfigClass
+from commons.service_logger.logger_factory_service import SrvLoggerFactory
+
+_logger = SrvLoggerFactory("folder_model").get_logger()
 
 
 class FoldersPOST(BaseModel):
@@ -129,7 +132,7 @@ class FoldersGETResponse(APIResponse):
             {
                 "id": 21,
                 "labels": [
-                    "Dataset"
+                    "Container"
                 ],
                 "global_entity_id": "dataset-4f640b7e-85be-11eb-99fe-eaff9e667817-1615833798",
                 "path": "gregtest",
@@ -253,9 +256,11 @@ def link_project(namespace, project_code, child_folder_geid):
     payload = {
         "code": project_code
     }
-    project_node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
+    project_node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query"
     response_query_project = requests.post(
         project_node_query_url, json=payload)
+    _logger.info("request url: {}".format(project_node_query_url))
+    _logger.info("request payload: {}".format(payload))
     if not response_query_project.status_code == 200:
         raise(
             Exception('[link_project] Invalid project code: {} {}'.format(project_code, response_query_project.status_code)))
