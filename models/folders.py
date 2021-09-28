@@ -27,6 +27,12 @@ class FoldersPOST(BaseModel):
     extra_attrs: dict = {}
 
 
+class BatchFoldersPOST(BaseModel):
+    payload: List[FoldersPOST]
+    zone: str = "greenroom | vrecore"
+    link_container: bool = True
+
+
 class FoldersPOSTResponse(APIResponse):
     '''
     Pre upload response class
@@ -197,6 +203,19 @@ class FoldersQueryResponse(APIResponse):
     )
 
 
+def http_bulk_post_node(payload: list, extra_labels: list):
+    '''
+    bulk create nodes in neo4j
+    '''
+    node_creation_url = ConfigClass.NEO4J_SERVICE + "nodes/Folder/batch"
+    data = {
+        "payload": payload,
+        "extra_labels": extra_labels
+    }
+    response = requests.post(node_creation_url, json=data)
+    return response
+
+
 def http_post_node(node_dict: dict, geid=None):
     '''
     will assign the geid automaticly
@@ -287,4 +306,22 @@ def link_project(namespace, project_code, child_folder_geid):
         return response
     else:
         raise(Exception("[link_project Error] {} {}".format(
+            response.status_code, response.text)))
+
+
+def bulk_link_project(pamras_location, start_label, end_label, payload):
+    # bulk create relations
+    data = {
+        "payload": payload,
+        "pamras_location": pamras_location,
+        "start_label": start_label,
+        "end_label": end_label
+    }
+    response = requests.post(ConfigClass.NEO4J_SERVICE +
+                             "relations/own/batch", json=data)
+
+    if response.status_code // 100 == 2:
+        return response
+    else:
+        raise(Exception("[bulk_link_project Error] {} {}".format(
             response.status_code, response.text)))

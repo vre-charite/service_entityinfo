@@ -62,7 +62,7 @@ class SetUpTest:
             self.log.info(f"PLEASE DELETE THE PROJECT MANUALLY WITH ID: {node_id}")
             raise e
 
-    def create_file(self, file_event):
+    def create_file(self, file_event, extra_data={}):
         self.log.info("\n")
         self.log.info("Creating testing file".ljust(80, '-'))
         filename = file_event.get('filename')
@@ -95,6 +95,11 @@ class SetUpTest:
                       "project_code": project_code,
                       "extra_labels": [namespace_label]
                     }
+        if extra_data:
+            payload = {
+                **payload,
+                **extra_data
+            }
         testing_api = ConfigClass.NEO4J_SERVICE + "nodes/File"
         self.log.info(f"File create payload {payload}")
         try:
@@ -201,3 +206,26 @@ class SetUpTest:
             response = self.app.delete(f"/v1/{project_geid}/workbench/{id}")
         return
 
+    def delete_manifest(self, manifest_id):
+        response = self.app.delete(f"/v1/manifest/{manifest_id}")
+        if response.status_code != 200:
+            self.log.info("ERROR DELETING MANIFEST SQL ENTRY")
+
+    def get_data_manifests(self, project_code):
+        response = self.app.get(f"/v1/manifests?project_code={project_code}")
+        if response.status_code != 200:
+            self.log.info("Error while getting data manifest")
+        res = response.json()['result']
+
+        return res
+
+    def get_project_details(self, project_code):
+        try:
+            url = ConfigClass.NEO4J_SERVICE + "/nodes/Container/query"
+            response = requests.post(url, json={"code":project_code})
+            if response.status_code == 200:
+                response = response.json()
+                return response
+        except Exception as error:
+            self.log.info(f"ERROR WHILE GETTING PROJECT: {error}")
+            raise error

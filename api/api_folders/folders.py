@@ -12,6 +12,7 @@ import copy
 import json
 import os
 import time
+from datetime import datetime, timezone
 
 router = APIRouter()
 _API_NAMESPACE = "api_folder_nodes"
@@ -21,6 +22,121 @@ _API_NAMESPACE = "api_folder_nodes"
 class FolderNodes:
     def __init__(self):
         self._logger = SrvLoggerFactory(_API_NAMESPACE).get_logger()
+
+    @router.post('/folders/batch', response_model=models.FoldersPOSTResponse, summary="Batch Folder Nodes Restful")
+    # @catch_internal(_API_NAMESPACE)
+    async def batch_folder(self, request_payload: models.BatchFoldersPOST):
+        '''
+        Post function to btach create folder
+        '''
+        self._logger.info(f"folder payload: {request_payload.__dict__}")
+        api_response = models.APIResponse()
+        payload = request_payload.payload
+
+        namespace = {
+            "vrecore": "VRECore",
+            "greenroom": "Greenroom"
+        }.get(request_payload.zone)
+        extra_labels = [namespace]
+
+        nodes_data = []
+        relations_data = []
+
+        for item in payload:
+            item = dict(item)
+            time_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
+            new_node = {
+                "global_entity_id": item['global_entity_id'],
+                "name": item['folder_name'],
+                "folder_level": item['folder_level'],
+                "folder_relative_path": item['folder_relative_path'],
+                "project_code": item['project_code'],
+                "tags": item['folder_tags'],
+                "list_priority": 10,
+                "uploader": item['uploader'],
+                "archived": False,
+                "display_path": os.path.join(item['folder_relative_path'],
+                                             item['folder_name']),
+                "time_created": time_now,
+                "time_lastmodified": time_now
+            }
+            if "extra_attrs" in item:
+                for k, v in item["extra_attrs"].items():
+                    new_node[k] = v
+
+            nodes_data.append(new_node)
+            if request_payload.link_container:
+                relations_data.append({
+                    "start_params": {
+                        "code": new_node['project_code']
+                    },
+                    "end_params": {
+                        "project_code": new_node['project_code'],
+                        "global_entity_id": new_node["global_entity_id"]
+                    }
+                })
+
+            if not request_payload.link_container and len(new_node['folder_relative_path']):
+                self._logger.info('create folder in elastic search')
+                try:
+                    es_body = {
+                        "global_entity_id": new_node["global_entity_id"],
+                        "zone": namespace,
+                        "data_type": "Folder",
+                        "operator": new_node['uploader'],
+                        "file_size": 0,
+                        "tags": new_node['tags'],
+                        "archived": False,
+                        "location": "",
+                        "time_lastmodified": time.time(),
+                        "process_pipeline": "",
+                        "uploader": new_node['uploader'],
+                        "file_name": new_node['name'],
+                        "time_created": time.time(),
+                        "atlas_guid": "",
+                        "display_path": new_node['display_path'],
+                        "generate_id": None,
+                        "project_code": new_node['project_code'],
+                        "priority": 10
+                    }
+
+                    es_res = requests.post(
+                        ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_body)
+                    self._logger.info(es_body)
+                    self._logger.info(es_res.text)
+                    if es_res.status_code != 200:
+                        self._logger.error(
+                            f"Error while creating folder node in elastic search : {es_res.text}")
+                        api_response.code = EAPIResponseCode.internal_error
+                        api_response.result = "Error while creating folder node in elastic search"
+                        return api_response.json_response()
+                except Exception as e:
+                    self._logger.error(
+                        "Error while call elastic search" + str(e))
+                    api_response.code = EAPIResponseCode.internal_error
+                    api_response.result = "Error while call elastic search" + \
+                        str(e)
+                    return api_response.json_response()
+
+        result_create_node = models.http_bulk_post_node(
+            nodes_data, extra_labels)
+
+        if result_create_node.status_code == 200:
+            if relations_data:
+                result_link_projects = models.bulk_link_project(
+                    ['start', 'end'], 'Container', 'Folder', relations_data)
+                if result_link_projects.status_code == 200:
+                    api_response.code = EAPIResponseCode.success
+                    api_response.result = {"result": "success"}
+                else:
+                    api_response.code = EAPIResponseCode.internal_error
+                    api_response.result = {
+                        "result": "failed to link projects with folders"}
+        else:
+            api_response.code = EAPIResponseCode.internal_error
+            api_response.result = {"result": "failed to create folders"}
+
+        return api_response.json_response()
 
     @router.post('/folders', response_model=models.FoldersPOSTResponse, summary="Folder Nodes Restful")
     @catch_internal(_API_NAMESPACE)

@@ -18,7 +18,7 @@ api_router.include_router(meta.router, prefix="/files", tags=["files"])
 api_router.include_router(files_stats.router, tags=["file-statistics"])
 api_router.include_router(workbench.router, tags=["workbench"])
 api_router.include_router(manifest.router, tags=["manifest"])
-api_router.include_router(file_attributes.router, prefix="/file/attributes", tags=["attributes"])
+api_router.include_router(file_attributes.router)
 
 
 api_router_v2 = APIRouter()

@@ -1,17 +1,26 @@
-from fastapi import APIRouter, Depends
-from fastapi_utils.cbv import cbv
 from models import files as models
-from models.base_models import EAPIResponseCode
-from models import folders as folder_models
-from resources.error_handler import catch_internal
+import math
+import os
+import time
+
+import requests
+from fastapi import APIRouter
+from fastapi_sqlalchemy import db
+from fastapi_utils.cbv import cbv
+
 from commons.service_logger.logger_factory_service import SrvLoggerFactory
 from config import ConfigClass
-import requests
-import math
-import time
-import os
+from models import files as models
+from models import folders as folder_models
+from models import manifest
+from models.base_models import APIResponse, EAPIResponseCode
+from models.manifest_sql import DataManifestModel, DataAttributeModel
+from resources.error_handler import catch_internal
+from .utils import *
 
 router = APIRouter()
+_logger = SrvLoggerFactory("api_files").get_logger()
+
 _API_NAMESPACE = "file_entity_restful"
 
 
@@ -80,13 +89,32 @@ class CreateFile:
             extra_labels.append("VRECore")
             es_payload['zone'] = 'VRECore'
 
-        del payload["namespace"]
-        payload["extra_labels"] = extra_labels
-        payload["list_priority"] = 20
+        neo4j_payload = {
+            "global_entity_id": payload["global_entity_id"],
+            "extra_labels": extra_labels,
+            "list_priority": 20,
+            "uploader": payload["uploader"],
+            "file_size": payload["file_size"],
+            "tags": payload["tags"],
+            "location": payload["location"],
+            "process_pipeline": payload["process_pipeline"],
+            "name": payload["name"],
+            "guid": payload["guid"],
+            "full_path": payload["full_path"],
+            "display_path": payload["display_path"],
+            "generate_id": payload["generate_id"],
+            "project_code": payload["project_code"],
+            "path": payload["path"],
+            "version_id": payload["version_id"],
+            "operator": payload["operator"],
+            "process_pipeline": payload["process_pipeline"],
+            "archived": payload["archived"],
+            "parent_folder_geid": payload["parent_folder_geid"],
+        }
 
         # Create node
         response = requests.post(
-            ConfigClass.NEO4J_SERVICE + "nodes/File", json=payload)
+            ConfigClass.NEO4J_SERVICE + "nodes/File", json=neo4j_payload)
         if response.status_code != 200:
             api_response.code = EAPIResponseCode.internal_error
             api_response.error_msg = f"Neo4j error: {response.json()}"
@@ -356,6 +384,139 @@ class TrashCreate:
             api_response.error_msg = f"Elastic Search Error: {es_res.json()}"
             return api_response.json_response()
 
+        return api_response.json_response()
+
+
+@cbv(router)
+class FileManifest:
+    # @router.put('/file/manifest', response_model=manifest.PUTAttachResponse, summary="Edit attached manifest")
+    @router.put('/{file_geid}/manifest', response_model=manifest.PUTAttachResponse,
+                summary="Edit attached manifest", tags=['files'])
+    def put(self, request: dict, file_geid: str, ):
+        api_response = APIResponse()
+        data = request
+
+        # file_node = get_file_node_bygeid(data["global_entity_id"])
+        file_node = get_file_node_bygeid(file_geid)
+        # data.pop("global_entity_id")
+        manifest_obj = db.session.query(DataManifestModel).get(file_node["manifest_id"])
+
+        # Check required attributes
+        attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=file_node["manifest_id"]). \
+            order_by(DataAttributeModel.id.asc())
+        valid_attributes = []
+        es_attributes = []
+        for attr in attributes:
+            valid_attributes.append(attr.name)
+            if not attr.optional and not attr.name in data:
+                api_response.result = "Missing required attribute"
+                api_response.code = EAPIResponseCode.bad_request
+                _logger.error(api_response.result)
+                return api_response.json_response()
+            if attr.type.value == "multiple_choice":
+                if not data[attr.name] in attr.value.split(","):
+                    if not data[attr.name] and attr.optional:
+                        continue
+                    api_response.result = "Invalid attribute value"
+                    api_response.code = EAPIResponseCode.bad_request
+                    _logger.error(api_response.result)
+                    return api_response.json_response()
+                attribute_value = []
+                attribute_value.append(data[attr.name])
+                es_attributes.append({
+                    "attribute_name": attr.name,
+                    "name": manifest_obj.name,
+                    "value": attribute_value
+                })
+            if attr.type.value == "text":
+                value = data[attr.name]
+                if value:
+                    if len(value) > 100:
+                        api_response.result = "text to long"
+                        api_response.code = EAPIResponseCode.bad_request
+                        _logger.error(api_response.result)
+                        return api_response.json_response()
+                    es_attributes.append({
+                        "attribute_name": attr.name,
+                        "name": manifest_obj.name,
+                        "value": value
+                    })
+        post_data = {
+            "manifest_id": file_node["manifest_id"],
+        }
+        for key, value in data.items():
+            if key not in valid_attributes:
+                api_response.result = "Not a valid attribute"
+                api_response.code = EAPIResponseCode.bad_request
+                _logger.error(api_response.result)
+                return api_response.json_response()
+            post_data["attr_" + key] = value
+
+        file_id = file_node["id"]
+        response = requests.put(ConfigClass.NEO4J_SERVICE + f"nodes/File/node/{file_id}", json=post_data)
+        api_response.result = response.json()[0]
+
+        # Update Elastic Search Entity
+        es_payload = {
+            "global_entity_id": file_node["global_entity_id"],
+            "updated_fields": {
+                "attributes": es_attributes,
+                "time_lastmodified": time.time()
+            }
+        }
+        es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+        if es_res.status_code != 200:
+            api_response.code = EAPIResponseCode.internal_error
+            api_response.error_msg = f"Elastic Search Error: {es_res.json()}"
+            _logger.error(api_response.error_msg)
+            return api_response.json_response()
+
+        return api_response.json_response()
+
+
+
+@cbv(router)
+class ValidateManifest:
+    @router.post('/manifest/validate', response_model=manifest.POSTValidateResponse, summary="Validate the input to attach a file manifest")
+    def post(self, data: manifest.POSTValidateRequest):
+        api_response = APIResponse()
+        manifest_name = data.manifest_name
+        project_code = data.project_code
+        manifest = db.session.query(DataManifestModel).filter_by(project_code=project_code, name=manifest_name).first()
+        if not manifest:
+            api_response.code = EAPIResponseCode.not_found
+            api_response.result = f"Manifest not found"
+            _logger.error(api_response.result)
+            return api_response.json_response()
+
+        attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id)
+        valid_attributes = []
+        for attr in attributes:
+            valid_attributes.append(attr.name)
+
+        attributes = data.attributes or {}
+        for key, value in attributes.items():
+            if key not in valid_attributes:
+                api_response.code = EAPIResponseCode.bad_request
+                api_response.result = "Invalid attribute"
+                _logger.error(api_response.result)
+                return api_response.json_response()
+
+        valid, error_msg = check_attributes(attributes)
+        if not valid:
+            api_response.code = EAPIResponseCode.bad_request
+            api_response.result = error_msg
+            _logger.error(api_response.result)
+            return api_response.json_response()
+
+        # Check required attributes
+        valid, error_msg = has_valid_attributes(manifest.id, data.__dict__)
+        if not valid:
+            api_response.result = error_msg
+            api_response.code = EAPIResponseCode.bad_request
+            _logger.error(api_response.result)
+            return api_response.json_response()
+        api_response.result = "Success"
         return api_response.json_response()
 
 

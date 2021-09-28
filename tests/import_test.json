@@ -1,0 +1,1 @@
+{"attributes":[{"name":"attr1","value":"a1,a2,a3,a4,a5","type":"multiple_choice","optional":false},{"name":"attr2","value":null,"type":"text","optional":false},{"name":"attr3","value":"t1,t2,t3","type":"multiple_choice","optional":true}]}

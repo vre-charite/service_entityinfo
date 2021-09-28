@@ -2,37 +2,13 @@ import requests
 from config import ConfigClass
 import time
 
-def get_files_recursive(folder_geid, all_files=[]):
-    query = {
-        "start_label": "Folder",
-        "end_labels": ["File", "Folder"],
-        "query": {
-            "start_params": {
-                "global_entity_id": folder_geid,
-            },
-            "end_params": {
-                "archived": False
-            }
-        }
-    }
-    
-
-    resp = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=query)
-    for node in resp.json()["results"]:
-        if "File" in node["labels"]:
-            all_files.append(node)
-        else:
-            get_files_recursive(node["global_entity_id"], all_files=all_files)
-    
-    return all_files
-
 
 def get_file_node_bygeid(geid):
     post_data = {"global_entity_id": geid}
     response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
     if not response.json():
         return None
-    return response.json()[0] 
+    return response.json()[0]
 
 
 def get_folder_node_bygeid(geid):
@@ -40,7 +16,7 @@ def get_folder_node_bygeid(geid):
     response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Folder/query", json=post_data)
     if not response.json():
         return None
-    return response.json()[0] 
+    return response.json()[0]
 
 def is_valid_file(file_node, project_role, username):
     if file_node['archived'] == True:
@@ -50,7 +26,7 @@ def is_valid_file(file_node, project_role, username):
             return False
         elif project_role == 'collaborator':
             if "VRECore" not in file_node['labels'] and file_node['uploader'] != username:
-                return False    
+                return False
             return True
         else:
             return True
@@ -135,3 +111,27 @@ def attach_attributes(manifest, attributes, file_node, _logger):
         return False
 
     return True
+
+
+def get_files_recursive(folder_geid, all_files=[]):
+    query = {
+        "start_label": "Folder",
+        "end_labels": ["File", "Folder"],
+        "query": {
+            "start_params": {
+                "global_entity_id": folder_geid,
+            },
+            "end_params": {
+                "archived": False
+            }
+        }
+    }
+
+    resp = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=query)
+    for node in resp.json()["results"]:
+        if "File" in node["labels"]:
+            all_files.append(node)
+        else:
+            get_files_recursive(node["global_entity_id"], all_files=all_files)
+
+    return all_files
