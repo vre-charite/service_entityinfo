@@ -23,24 +23,32 @@ class TestProjectFileCheck(unittest.TestCase):
         core_file_event = raw_file_event.copy()
         core_file_event['namespace'] = 'vrecore'
         core_file_event['filename'] = 'admin/entity_info_test_3'
+        
+        trash_file_event = core_file_event.copy()
+        trash_file_event['namespace'] = 'trashfile'
+        trash_file_event['filename'] = 'admin/entity_info_test_4'
         try:
             cls.container_id = cls.test.create_project(cls.project_code).get('id')
             cls.log.info(f"project ID: {cls.container_id}")
             core_file_event['project_id'] = cls.container_id
             raw_file_event['project_id'] = cls.container_id
-            create_file_raw_result = cls.test.create_file(raw_file_event)
-            create_file_core_result = cls.test.create_file(core_file_event)
+            create_file_raw_result = cls.test.create_file(raw_file_event, extra_data={"archived": False})
+            create_file_core_result = cls.test.create_file(core_file_event, extra_data={"archived": False})
+            create_file_trash_result = cls.test.create_file(trash_file_event, extra_data={"archived": True})
             folder_geid = "entity_info_meta_test_geid"
             cls.folder_id = cls.test.create_folder(folder_geid, cls.project_code)["id"]
             cls.log.info(f"Project ID: {cls.container_id}")
             cls.log.info(f"Raw File Info: {create_file_raw_result}")
             cls.log.info(f"Core File Info: {create_file_core_result}")
+            cls.log.info(f"Trash File Info: {create_file_trash_result}")
             cls.raw_file_id = create_file_raw_result.get('id')
             cls.core_file_id = create_file_core_result.get('id')
-            cls.file_id = [cls.raw_file_id, cls.core_file_id]
+            cls.trash_file_id = create_file_trash_result.get('id')
+            cls.file_id = [cls.raw_file_id, cls.core_file_id, cls.trash_file_id]
             cls.raw_file_guid = create_file_raw_result.get('guid')
             cls.core_file_guid = create_file_core_result.get('guid')
-            cls.file_guid = [cls.raw_file_guid, cls.core_file_guid]
+            cls.trash_file_guid = create_file_trash_result.get('guid')
+            cls.file_guid = [cls.raw_file_guid, cls.core_file_guid, cls.trash_file_guid]
         except Exception as e:
             cls.log.error(f"Failed set up test due to error: {e}")
             if cls.container_id:
@@ -150,6 +158,28 @@ class TestProjectFileCheck(unittest.TestCase):
             res_result = res.get('result')
             self.log.info(f"COMPARING result: {res_result} VS {''}")
             self.assertEqual(res_result, {})
+        except Exception as e:
+            self.log.error(e)
+            raise e
+    
+    def test_07_get_trash_file(self):
+        self.log.info("\n")
+        self.log.info("07 test get_trash_file".center(80, '-'))
+        test_api = f'/v1/project/{self.project_code}/file/exist'
+        data = {
+            "zone": "vrecore",
+            "file_relative_path": "admin/entity_info_test_4"
+        }
+        try:
+            result = self.app.get(test_api, params=data)
+            self.log.info(result)
+            self.log.info(f"COMPARING CODE: {result.status_code} VS 404")
+            self.assertEqual(result.status_code, 404)
+            res = result.json()
+            self.log.info(res)
+            res_error = res.get('error_msg')
+            self.log.info(f"COMPARING error_msg: {res_error} VS File not found")
+            self.assertEqual(res_error, f'File not found')
         except Exception as e:
             self.log.error(e)
             raise e

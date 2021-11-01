@@ -37,7 +37,8 @@ class FileCheck:
         data = {'query': {
             "display_path": file_relative_path,
             "project_code": project_code,
-            "labels": ['File', zone]
+            "labels": ['File', zone],
+            "archived": False
         }
         }
         self._logger.info(f"POST payload: {data}")

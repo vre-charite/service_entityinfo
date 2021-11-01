@@ -88,7 +88,9 @@ class CreateFile:
         else:
             extra_labels.append("VRECore")
             es_payload['zone'] = 'VRECore'
-
+            
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # why wasting line here if we dont do any mapping?
         neo4j_payload = {
             "global_entity_id": payload["global_entity_id"],
             "extra_labels": extra_labels,

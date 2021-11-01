@@ -4,7 +4,7 @@ import time
 
 
 def get_file_node_bygeid(geid):
-    post_data = {"global_entity_id": geid}
+    post_data = {"global_entity_id": geid, "archived": False}
     response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
     if not response.json():
         return None
@@ -12,7 +12,7 @@ def get_file_node_bygeid(geid):
 
 
 def get_folder_node_bygeid(geid):
-    post_data = {"global_entity_id": geid}
+    post_data = {"global_entity_id": geid, "archived": False}
     response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Folder/query", json=post_data)
     if not response.json():
         return None
@@ -122,7 +122,12 @@ def get_files_recursive(folder_geid, all_files=[]):
                 "global_entity_id": folder_geid,
             },
             "end_params": {
-                "archived": False
+                "Folder": {
+                    "archived": False
+                },
+                "File": {
+                    "archived": False
+                }
             }
         }
     }

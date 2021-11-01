@@ -4,7 +4,7 @@ from requests.models import HTTPError
 
 srv_namespace = "service_entityinfo"
 CONFIG_CENTER = "http://10.3.7.222:5062" \
-    if os.environ.get('env') == "test" \
+    if os.environ.get('env', "test") == "test" \
     else "http://common.utility:5062"
 
 

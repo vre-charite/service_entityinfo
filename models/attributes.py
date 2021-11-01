@@ -5,9 +5,6 @@ class AttachAttributesPOST(BaseModel):
     manifest_id: str
     global_entity_id: list
     attributes: dict
-    inherit: bool
-    project_role: str
-    username: str
 
 
 class AttachPOSTResponse(APIResponse):

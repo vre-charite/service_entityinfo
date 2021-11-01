@@ -29,7 +29,7 @@ def get_files_recursive(folder_geid, all_files=[]):
 
     return all_files
 
-
+# TODO remove the label checking by get by geid
 def get_source_label(source_type):
     return {
         "Project": "Container",
@@ -74,6 +74,7 @@ def convert_query(labels, query, partial, source_type):
         "Folder": ["name", "uploader", "folder_level", "archived"],
         "TrashFile": ["name", "uploader", "archived"],
     }
+
     neo4j_query = {}
     for label in labels:
         neo4j_query[label] = {}
@@ -86,13 +87,20 @@ def convert_query(labels, query, partial, source_type):
                         neo4j_query[label]["partial"] = []
                     neo4j_query[label]["partial"].append(key)
             elif key == "permissions_display_path":
+                # here is for the user in collaborator role
+                # the user can ONLY see their own file in greenroom
+                # so we use the display path to do the authorization filter
+                # in neo4j
                 if label != "VRECore:TrashFile":
-                    neo4j_query[label]["display_path"] = value
+                    # add the ending slash for user who has same start(bug VRE-2046)
+                    # eg. username1 vs username11
+                    neo4j_query[label]["display_path"] = value + "/" 
                     neo4j_query[label]["startswith"] = ["display_path"] 
         if source_type == "TrashFile" and 'Folder' in label:
             neo4j_query[label]["in_trashbin"] = True
             if neo4j_query[label].get('archived'):
                 del neo4j_query[label]['archived']
+
     return neo4j_query
 
 

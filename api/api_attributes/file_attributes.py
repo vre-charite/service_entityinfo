@@ -1,4 +1,3 @@
-from models import attributes as models
 import requests
 
 from fastapi_sqlalchemy import db
@@ -33,11 +32,7 @@ class AttachAttributes:
         manifest_id = data.manifest_id
         global_entity_id = data.global_entity_id
         attributes = data.attributes
-        inherit = data.inherit
-        project_role = data.project_role
-        username = data.username
 
-        # res = requests.get(ConfigClass.BFF_SERVICE + 'data/manifest/{}'.format(manifest_id))
         res = requests.get(ConfigClass.ENTITYINFO_SERVICE + f"manifest/{manifest_id}")
         manifest = None
         if res.status_code == 200:
