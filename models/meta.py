@@ -37,6 +37,64 @@ class MetaGETResponse(APIResponse):
         }
     )
 
+
+class POSTFileDetail(BaseModel):
+    geids: list
+
+
+class POSTFileDetailResponse(APIResponse):
+    result: list = Field({}, example={
+           'code': 200,
+           'error_msg': '',
+           'num_of_pages': 1,
+           'page': 1,
+           'result': [{
+               'archived': False,
+               'description': 'description',
+               'file_size': 0,
+               'full_path': 'test/zy/testzy9.txt',
+               'generate_id': '',
+               'guid': 'f1547da2-8372-4ae3-9e2b-17c80e97f113',
+               'id': 74,
+               'labels': ['Raw', 'File', 'Greenroom'],
+               'name': 'testzy9.txt',
+               'path': 'test/zy',
+               'time_created': '2021-01-08T17:09:51',
+               'time_lastmodified': '2021-01-08T17:09:51',
+               'uploader': 'testzy',
+               'process_pipeline': 'test'
+            }],
+            'total': 1
+        }
+    )
+
+
+class GETFileDetail(APIResponse):
+    result: dict = Field({}, example={
+           'code': 200,
+           'error_msg': '',
+           'num_of_pages': 1,
+           'page': 1,
+           'result': {
+               'archived': False,
+               'description': 'description',
+               'file_size': 0,
+               'full_path': 'test/zy/testzy9.txt',
+               'generate_id': '',
+               'guid': 'f1547da2-8372-4ae3-9e2b-17c80e97f113',
+               'id': 74,
+               'labels': ['Raw', 'File', 'Greenroom'],
+               'name': 'testzy9.txt',
+               'path': 'test/zy',
+               'time_created': '2021-01-08T17:09:51',
+               'time_lastmodified': '2021-01-08T17:09:51',
+               'uploader': 'testzy',
+               'process_pipeline': 'test'
+            },
+            'total': 1
+        }
+    )
+
 def get_parent_connections(entity_geid):
     '''
     get parent connections from neo4j service

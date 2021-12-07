@@ -309,11 +309,11 @@ def link_project(namespace, project_code, child_folder_geid):
             response.status_code, response.text)))
 
 
-def bulk_link_project(pamras_location, start_label, end_label, payload):
+def bulk_link_project(params_location, start_label, end_label, payload):
     # bulk create relations
     data = {
         "payload": payload,
-        "pamras_location": pamras_location,
+        "params_location": params_location,
         "start_label": start_label,
         "end_label": end_label
     }

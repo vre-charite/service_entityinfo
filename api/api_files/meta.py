@@ -3,12 +3,54 @@ import json
 import requests
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
-from models.meta import MetaGET, MetaGETResponse, get_parent_connections
-from models.base_models import EAPIResponseCode
+from models.meta import MetaGET, MetaGETResponse, get_parent_connections, GETFileDetail, POSTFileDetail, \
+        POSTFileDetailResponse
+from models.base_models import EAPIResponseCode, APIResponse
 from config import ConfigClass
 from .utils import get_source_label, get_query_labels, convert_query
 
 router = APIRouter()
+
+
+@cbv(router)
+class FileBulkDetail:
+    @router.post('/bulk/detail', response_model=POSTFileDetailResponse, summary="Get files by geid")
+    async def post(self, data: POSTFileDetail):
+        api_response = APIResponse()
+        if not data.geids:
+            api_response.code = EAPIResponseCode.bad_request
+            api_response.error_msg = "geids is required"
+            return api_response.json_response()
+
+        try:
+            response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/query/geids", json={"geids": data.geids})
+        except Exception as e:
+            api_response.code = EAPIResponseCode.internal_error
+            api_response.error_msg = "Neo4j error: " + str(e)
+            return api_response.json_response()
+
+        return response.json()
+
+
+@cbv(router)
+class FileDetail:
+    @router.get('/detail/{file_geid}', response_model=GETFileDetail, summary="Get detail of single file by geid")
+    async def get(self, file_geid):
+        api_response = APIResponse()
+        try:
+            response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/geid/{file_geid}")
+        except Exception as e:
+            api_response.code = EAPIResponseCode.internal_error
+            api_response.error_msg = "Neo4j error: " + str(e)
+            return api_response.json_response()
+
+        if not response.json():
+            api_response.code = EAPIResponseCode.not_found
+            api_response.error_msg = "File not found"
+            return api_response.json_response()
+        api_response.result = response.json()[0]
+        return api_response.json_response()
+
 
 @cbv(router)
 class FileMeta:

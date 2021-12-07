@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
 from commons.service_logger.logger_factory_service import SrvLoggerFactory
+# REFACTOR IS REQUIRED <------------------------------------------
 from models import folders as models
 from models.base_models import EAPIResponseCode
 from models.meta import get_parent_connections
@@ -44,7 +45,7 @@ class FolderNodes:
 
         for item in payload:
             item = dict(item)
-            time_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
+            # time_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
             new_node = {
                 "global_entity_id": item['global_entity_id'],
                 "name": item['folder_name'],
@@ -57,8 +58,8 @@ class FolderNodes:
                 "archived": False,
                 "display_path": os.path.join(item['folder_relative_path'],
                                              item['folder_name']),
-                "time_created": time_now,
-                "time_lastmodified": time_now
+                # "time_created": time_now,
+                # "time_lastmodified": time_now
             }
             if "extra_attrs" in item:
                 for k, v in item["extra_attrs"].items():
@@ -156,6 +157,7 @@ class FolderNodes:
         }.get(request_payload.zone)
         extra_labels = [namespace]
         extra_labels += request_payload.extra_labels
+        # time_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")
         new_node = {
             "global_entity_id": request_payload.global_entity_id,
             "name": request_payload.folder_name,
@@ -168,7 +170,9 @@ class FolderNodes:
             "uploader": request_payload.uploader,
             "archived": False,
             "display_path": os.path.join(request_payload.folder_relative_path,
-                                         request_payload.folder_name)
+                                         request_payload.folder_name),
+            # "time_created": time_now,
+            # "time_lastmodified": time_now
         }
 
         # name folder do not need to be stored in es
