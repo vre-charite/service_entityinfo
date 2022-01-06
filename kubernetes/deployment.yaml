@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: entityinfo
-          image: 10.32.42.225:5000/entityinfo:<VERSION>
+          image: s-hdp-vre-v007.charite.de/entityinfo:<VERSION>
           ports:
             - containerPort: 5066
           env:
