@@ -1,16 +1,34 @@
-from fastapi import APIRouter, Depends
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
+from fastapi import APIRouter
 from fastapi_utils.cbv import cbv
-from models.base_models import EAPIResponseCode, APIResponse
+from logger import LoggerFactory
+
 import models.files as files_models
 import models.project as project_models
+from models.base_models import APIResponse
+from models.base_models import EAPIResponseCode
 from resources.error_handler import catch_internal
-from resources.helpers import get_operation_logs_total, get_file_count_neo4j
-from commons.service_logger.logger_factory_service import SrvLoggerFactory
-from config import ConfigClass
-import requests
-import math
-import time
-
+from resources.helpers import get_file_count_neo4j
+from resources.helpers import get_operation_logs_total
 
 router = APIRouter()
 _API_NAMESPACE = "api_files_stats"
@@ -19,12 +37,12 @@ _API_NAMESPACE = "api_files_stats"
 @cbv(router)
 class FilesStats:
     def __init__(self):
-        self._logger = SrvLoggerFactory(_API_NAMESPACE).get_logger()
+        self._logger = LoggerFactory(_API_NAMESPACE).get_logger()
 
     @router.get('/project/{project_geid}/files/statistics', response_model=files_models.FilesStatsGETResponse,
                 summary="FilesDailyStats Restful")
     @catch_internal(_API_NAMESPACE)
-    async def get(self, project_geid, start_date, end_date, operator=None):
+    def get(self, project_geid, start_date, end_date, operator=None):
         '''
         Get function to extract daily file statistics
         '''
@@ -51,7 +69,7 @@ class FilesStats:
             project_info['code'],
             zone,
             uploader=operator
-        ) for zone in ["Greenroom", "VRECore"]]
+        ) for zone in ["Greenroom", "Core"]]
         # return response
         api_response.result = {
             "uploaded": stats_from_auditlogs[0],

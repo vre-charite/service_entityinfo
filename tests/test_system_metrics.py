@@ -18,23 +18,18 @@
 # permissions and limitations under the Licence.
 # 
 
-FROM python:3.7-buster
+def test_v1_get_system_metrics_return_200(test_client, create_db_system_metrics):
+    response = test_client.get(f"v1/stats")
+    assert response.status_code == 200
 
-ARG PIP_USERNAME
-ARG PIP_PASSWORD
 
-WORKDIR /usr/src/app
+def test_v1_get_system_metrics_with_date_return_200(test_client, create_db_system_metrics):
+    response = test_client.get(f"v1/stats?date='2022-02-09'")
+    assert response.status_code == 200
 
-ENV TZ=America/Toronto
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && apt-get update && \
-apt-get install -y vim-tiny less && ln -s /usr/bin/vim.tiny /usr/bin/vim && rm -rf /var/lib/apt/lists/*
-COPY . .
-
-RUN pip install --no-cache-dir poetry==1.1.12
-RUN poetry config virtualenvs.create false && poetry config http-basic.pilot ${PIP_USERNAME} ${PIP_PASSWORD}
-RUN poetry install --no-dev --no-root --no-interaction
-
-RUN chmod +x gunicorn_starter.sh
-
-CMD ["./gunicorn_starter.sh"]
+def test_v1_get_system_metrics_with_invalid_date_return_500(test_client, create_db_system_metrics):
+    response = test_client.get(f"v1/stats?date='2015-01-20'")
+    res = response.json()
+    assert response.status_code == 500
+    assert res["error_msg"] == "Retrieval of metrics failed: Failure to query metrics from database table"

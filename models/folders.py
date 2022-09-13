@@ -1,12 +1,36 @@
-from pydantic import BaseModel, Field
-from models.base_models import APIResponse, PaginationRequest
-from typing import List, Optional
-from resources import helpers
-import requests
-from config import ConfigClass
-from commons.service_logger.logger_factory_service import SrvLoggerFactory
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
 
-_logger = SrvLoggerFactory("folder_model").get_logger()
+from typing import List
+from typing import Optional
+
+import httpx
+from logger import LoggerFactory
+from pydantic import BaseModel
+from pydantic import Field
+
+from config import ConfigClass
+from models.base_models import APIResponse
+from resources import helpers
+
+_logger = LoggerFactory('folder_model').get_logger()
 
 
 class FoldersPOST(BaseModel):
@@ -20,7 +44,7 @@ class FoldersPOST(BaseModel):
     folder_parent_name: str
     uploader: str
     folder_relative_path: str
-    zone: str = "greenroom | vrecore"
+    zone: str = "greenroom | core"
     project_code: str
     folder_tags: List[str] = []
     extra_labels: List[str] = []
@@ -29,7 +53,7 @@ class FoldersPOST(BaseModel):
 
 class BatchFoldersPOST(BaseModel):
     payload: List[FoldersPOST]
-    zone: str = "greenroom | vrecore"
+    zone: str = "greenroom | core"
     link_container: bool = True
 
 
@@ -55,8 +79,7 @@ class FoldersPOSTResponse(APIResponse):
         ],
         "priority": 0,
         "uploader": "testzy"
-    }
-    )
+    })
 
 
 class FoldersGETResponse(APIResponse):
@@ -171,8 +194,7 @@ class FoldersGETResponse(APIResponse):
                 "tags": []
             }
         ]
-    }
-    )
+    })
 
 
 class FoldersQueryResponse(APIResponse):
@@ -199,20 +221,20 @@ class FoldersQueryResponse(APIResponse):
             "priority": 0,
             "uploader": "testzy"
         }
-    ]
-    )
+    ])
 
 
 def http_bulk_post_node(payload: list, extra_labels: list):
     '''
     bulk create nodes in neo4j
     '''
-    node_creation_url = ConfigClass.NEO4J_SERVICE + "nodes/Folder/batch"
+    node_creation_url = ConfigClass.NEO4J_SERVICE_V1 + "nodes/Folder/batch"
     data = {
         "payload": payload,
         "extra_labels": extra_labels
     }
-    response = requests.post(node_creation_url, json=data)
+    with httpx.Client() as client:
+        response = client.post(node_creation_url, json=data)
     return response
 
 
@@ -222,8 +244,9 @@ def http_post_node(node_dict: dict, geid=None):
     '''
     if not geid:
         node_dict["global_entity_id"] = helpers.get_geid()
-    node_creation_url = ConfigClass.NEO4J_SERVICE + "nodes/Folder"
-    response = requests.post(node_creation_url, json=node_dict)
+    node_creation_url = ConfigClass.NEO4J_SERVICE_V1 + "nodes/Folder"
+    with httpx.Client() as client:
+        response = client.post(node_creation_url, json=node_dict)
     return response
 
 
@@ -231,8 +254,9 @@ def http_query_node(namespace, query_params={}):
     payload = {
         **query_params
     }
-    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Folder/query"
-    response = requests.post(node_query_url, json=payload)
+    node_query_url = ConfigClass.NEO4J_SERVICE_V1 + "nodes/Folder/query"
+    with httpx.Client() as client:
+        response = client.post(node_query_url, json=payload)
     return response
 
 
@@ -243,31 +267,32 @@ def link_folder_parent(namespace, parent_folder_geid, child_folder_geid):
     respon_parent_folder_query = http_query_node(
         namespace, {"global_entity_id": parent_folder_geid})
     if not respon_parent_folder_query.status_code == 200:
-        raise(Exception("[respon_parent_folder_query Error] {} {}".format(
+        raise (Exception("[respon_parent_folder_query Error] {} {}".format(
             respon_parent_folder_query.status_code, respon_parent_folder_query.text)))
     parent_folder_node = respon_parent_folder_query.json()
     if not parent_folder_node:
-        raise(Exception("[respon_parent_folder_query Error] Not found {} {}".format(
+        raise (Exception("[respon_parent_folder_query Error] Not found {} {}".format(
             respon_parent_folder_query.status_code, parent_folder_geid)))
     parent_folder_node = parent_folder_node[0]
     respon_child_folder_query = http_query_node(
         namespace, {"global_entity_id": child_folder_geid})
     if not respon_child_folder_query.status_code == 200:
-        raise(Exception("[respon_child_folder_query Error] {} {}".format(
+        raise (Exception("[respon_child_folder_query Error] {} {}".format(
             respon_child_folder_query.status_code, respon_child_folder_query.text)))
     child_folder_node = respon_child_folder_query.json()
     if not child_folder_node:
-        raise(Exception("[respon_child_folder_query Error] Not found {} {}".format(
+        raise (Exception("[respon_child_folder_query Error] Not found {} {}".format(
             respon_child_folder_query.status_code, child_folder_geid)))
     child_folder_node = child_folder_node[0]
     relation_payload = {
         "start_id": parent_folder_node["id"], "end_id": child_folder_node["id"]}
-    response = requests.post(ConfigClass.NEO4J_SERVICE +
-                             "relations/own", json=relation_payload)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 +
+                               "relations/own", json=relation_payload)
     if response.status_code // 100 == 2:
         return response
     else:
-        raise(Exception("[link_parent Error] {} {}".format(
+        raise (Exception("[link_parent Error] {} {}".format(
             response.status_code, response.text)))
 
 
@@ -275,37 +300,39 @@ def link_project(namespace, project_code, child_folder_geid):
     payload = {
         "code": project_code
     }
-    project_node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query"
-    response_query_project = requests.post(
-        project_node_query_url, json=payload)
+    project_node_query_url = ConfigClass.NEO4J_SERVICE_V1 + "nodes/Container/query"
+    with httpx.Client() as client:
+        response_query_project = client.post(
+            project_node_query_url, json=payload)
     _logger.info("request url: {}".format(project_node_query_url))
     _logger.info("request payload: {}".format(payload))
     if not response_query_project.status_code == 200:
-        raise(
+        raise (
             Exception('[link_project] Invalid project code: {} {}'.format(project_code, response_query_project.status_code)))
     project = response_query_project.json()
     if not project:
-        raise(
+        raise (
             Exception('[link_project] Not found project: {}'.format(project_code)))
     project = project[0]
     respon_child_folder_query = http_query_node(
         namespace, {"global_entity_id": child_folder_geid})
     if not respon_child_folder_query.status_code == 200:
-        raise(Exception("[respon_child_folder_query Error] {} {}".format(
+        raise (Exception("[respon_child_folder_query Error] {} {}".format(
             respon_child_folder_query.status_code, respon_child_folder_query.text)))
     child_folder_node = respon_child_folder_query.json()
     if not child_folder_node:
-        raise(Exception("[respon_child_folder_query Error] Not found {} {}".format(
+        raise (Exception("[respon_child_folder_query Error] Not found {} {}".format(
             respon_child_folder_query.status_code, child_folder_geid)))
     child_folder_node = child_folder_node[0]
     relation_payload = {
         "start_id": project["id"], "end_id": child_folder_node["id"]}
-    response = requests.post(ConfigClass.NEO4J_SERVICE +
-                             "relations/own", json=relation_payload)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 +
+                               "relations/own", json=relation_payload)
     if response.status_code // 100 == 2:
         return response
     else:
-        raise(Exception("[link_project Error] {} {}".format(
+        raise (Exception("[link_project Error] {} {}".format(
             response.status_code, response.text)))
 
 
@@ -317,11 +344,12 @@ def bulk_link_project(params_location, start_label, end_label, payload):
         "start_label": start_label,
         "end_label": end_label
     }
-    response = requests.post(ConfigClass.NEO4J_SERVICE +
-                             "relations/own/batch", json=data)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 +
+                               "relations/own/batch", json=data)
 
     if response.status_code // 100 == 2:
         return response
     else:
-        raise(Exception("[bulk_link_project Error] {} {}".format(
+        raise (Exception("[bulk_link_project Error] {} {}".format(
             response.status_code, response.text)))

@@ -1,185 +1,110 @@
-import unittest
-from tests.logger import Logger
-from tests.prepare_test import SetUpTest, SetupException
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
+project_code = "unittest_entity_info"
+
+def test_v1_check_if_file_exists_in_greenroom_return_200(test_client, httpx_mock):
+    # query node
+    httpx_mock.add_response(
+        method='POST',
+        url="http://neo4j_service/v2/neo4j/nodes/query",
+        status_code=200,
+        json={"result": [{"id": 64739, "labels": ["Greenroom", "File"],
+                          "global_entity_id": "27b12869-ae56",
+                          "input_file_id": "27b12869", "display_path": "admin/entity_info_test_1",
+                          "project_code": "unittest_entity_info"}]}
+    )
+
+    data = {
+        "zone": "greenroom",
+        "file_relative_path": "admin/entity_info_test_1"
+    }
+
+    response = test_client.get(f"/v1/project/{project_code}/file/exist", params=data)
+    assert response.status_code == 200
+    res = response.json()
+    assert len(res['result']) == 1
 
 
-class TestProjectFileCheck(unittest.TestCase):
-    log = Logger(name='test_project_api.log')
-    test = SetUpTest(log)
-    project_code = "unittest_entity_info"
-    container_id = ''
-    file_id = []
-    file_guid = []
-    folder_id = ''
+def test_v1_check_if_file_exists_in_core_return_200(test_client, httpx_mock):
+    # query node
+    httpx_mock.add_response(
+        method='POST',
+        url="http://neo4j_service/v2/neo4j/nodes/query",
+        status_code=200,
+        json={"result": [{"id": 64740, "labels": ["Core", "File"],
+                          "global_entity_id": "27b12854678",
+                          "input_file_id": "279898ab", "display_path": "admin/entity_info_test_3",
+                          "project_code": "unittest_entity_info"}]}
+    )
 
-    @classmethod
-    def setUpClass(cls):
-        cls.log = cls.test.log
-        cls.app = cls.test.app
-        raw_file_event = {'filename': 'admin/entity_info_test_1',
-                          'namespace': 'greenroom',
-                          'project_code': cls.project_code}
+    data = {
+        "zone": "core",
+        "file_relative_path": "admin/entity_info_test_3"
+    }
 
-        core_file_event = raw_file_event.copy()
-        core_file_event['namespace'] = 'vrecore'
-        core_file_event['filename'] = 'admin/entity_info_test_3'
-        
-        trash_file_event = core_file_event.copy()
-        trash_file_event['namespace'] = 'trashfile'
-        trash_file_event['filename'] = 'admin/entity_info_test_4'
-        try:
-            cls.container_id = cls.test.create_project(cls.project_code).get('id')
-            cls.log.info(f"project ID: {cls.container_id}")
-            core_file_event['project_id'] = cls.container_id
-            raw_file_event['project_id'] = cls.container_id
-            create_file_raw_result = cls.test.create_file(raw_file_event, extra_data={"archived": False})
-            create_file_core_result = cls.test.create_file(core_file_event, extra_data={"archived": False})
-            create_file_trash_result = cls.test.create_file(trash_file_event, extra_data={"archived": True})
-            folder_geid = "entity_info_meta_test_geid"
-            cls.folder_id = cls.test.create_folder(folder_geid, cls.project_code)["id"]
-            cls.log.info(f"Project ID: {cls.container_id}")
-            cls.log.info(f"Raw File Info: {create_file_raw_result}")
-            cls.log.info(f"Core File Info: {create_file_core_result}")
-            cls.log.info(f"Trash File Info: {create_file_trash_result}")
-            cls.raw_file_id = create_file_raw_result.get('id')
-            cls.core_file_id = create_file_core_result.get('id')
-            cls.trash_file_id = create_file_trash_result.get('id')
-            cls.file_id = [cls.raw_file_id, cls.core_file_id, cls.trash_file_id]
-            cls.raw_file_guid = create_file_raw_result.get('guid')
-            cls.core_file_guid = create_file_core_result.get('guid')
-            cls.trash_file_guid = create_file_trash_result.get('guid')
-            cls.file_guid = [cls.raw_file_guid, cls.core_file_guid, cls.trash_file_guid]
-        except Exception as e:
-            cls.log.error(f"Failed set up test due to error: {e}")
-            if cls.container_id:
-                cls.log.error(f"DELETE PROJECT: {cls.container_id}")
-                cls.test.delete_project(cls.container_id)
-            raise SetupException
+    response = test_client.get(f"/v1/project/{project_code}/file/exist", params=data)
+    assert response.status_code == 200
+    res = response.json()
+    assert len(res['result']) == 1
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.log.info("\n")
-        cls.log.info("START TEAR DOWN PROCESS")
-        cls.log.info(f"File ID: {cls.file_id}")
-        cls.log.info(f"File GUID: {cls.file_guid}")
-        try:
-            [cls.test.delete_file_node(f) for f in cls.file_id]
-            [cls.test.delete_file_entity(f) for f in cls.file_guid]
-            cls.test.delete_project(cls.container_id)
-            cls.test.delete_folder_node(cls.folder_id)
-        except Exception as e:
-            cls.log.error("Please manual delete node and entity")
-            cls.log.error(e)
-            raise e
 
-    def test_01_get_raw_file(self):
-        self.log.info("\n")
-        self.log.info("01 test get_raw_file".center(80, '-'))
-        test_api = f'/v1/project/{self.project_code}/file/exist'
-        data = {
-            "zone": "greenroom",
-            "file_relative_path": "admin/entity_info_test_1"
-        }
-        try:
-            result = self.app.get(test_api, params=data)
-            self.log.info(f"Result: {result.text}")
-            self.log.info(f"COMPARING CODE: {result.status_code} VS 200")
-            self.assertEqual(result.status_code, 200)
-            res = result.json()
-            self.log.info(res)
-            self.assertEqual(len(res.get('result')), 1)
-        except Exception as e:
-            self.log.error(e)
-            raise e
+def test_v1_confirm_file_not_exist_in_zone_return_404(test_client, httpx_mock):
+    # query node
+    httpx_mock.add_response(
+        method='POST',
+        url="http://neo4j_service/v2/neo4j/nodes/query",
+        json={"result": []}
+    )
 
-    def test_03_get_vre_core_file(self):
-        self.log.info("\n")
-        self.log.info("03 test get_vre_core_file".center(80, '-'))
-        test_api = f'/v1/project/{self.project_code}/file/exist'
-        data = {
-            "zone": "vrecore",
-            "file_relative_path": "admin/entity_info_test_3"
-        }
-        try:
-            self.log.info(f"PAYLOAD: {data}")
-            result = self.app.get(test_api, params=data)
-            self.log.info(result.text)
-            self.log.info(f"COMPARING CODE: {result.status_code} VS 200")
-            self.assertEqual(result.status_code, 200)
-            res = result.json()
-            self.log.info(res)
-            self.assertEqual(len(res.get('result')), 1)
-        except Exception as e:
-            self.log.error(e)
-            raise e
+    data = {
+        "zone": "core",
+        "file_relative_path": "admin/entity_info_test_3333"
+    }
+    response = test_client.get(f"/v1/project/{project_code}/file/exist", params=data)
+    assert response.status_code == 404
+    res = response.json()
+    assert res["result"] == []
+    assert res["error_msg"] == 'File not found'
 
-    def test_04_get_non_exist_file(self):
-        self.log.info("\n")
-        self.log.info("04 test non_exist_file".center(80, '-'))
-        test_api = f'/v1/project/{self.project_code}/file/exist'
-        data = {
-            "zone": "vrecore",
-            "file_relative_path": "admin/entity_info_test_3333"
-        }
-        try:
-            result = self.app.get(test_api, params=data)
-            self.log.info(result)
-            self.log.info(f"COMPARING CODE: {result.status_code} VS 404")
-            self.assertEqual(result.status_code, 404)
-            res = result.json()
-            self.log.info(res)
-            self.log.info(f"COMPARING: {res.get('result')} VS '[]'")
-            self.assertEqual(res.get('result'), [])
-            self.log.info(f"COMPARING: {res.get('error_msg')} VS File not found")
-            self.assertEqual(res.get('error_msg'), 'File not found')
-        except Exception as e:
-            self.log.error(e)
-            raise e
 
-    def test_06_get_with_wrong_zone(self):
-        self.log.info("\n")
-        self.log.info("06 test get_file_with_wrong_zone".center(80, '-'))
-        test_api = f'/v1/project/{self.project_code}/file/exist'
-        wrong_zone = "fakezone"
-        data = {
-            "zone": wrong_zone,
-            "file_relative_path": "admin/entity_info_test_1"
-        }
-        try:
-            result = self.app.get(test_api, params=data)
-            self.log.info(result)
-            self.log.info(f"COMPARING CODE: {result.status_code} VS 400")
-            self.assertEqual(result.status_code, 400)
-            res = result.json()
-            self.log.info(res)
-            res_error = res.get('error_msg')
-            self.log.info(f"COMPARING error_msg: {res_error} VS Invalid zone")
-            self.assertEqual(res_error, f'Invalid zone')
-            res_result = res.get('result')
-            self.log.info(f"COMPARING result: {res_result} VS {''}")
-            self.assertEqual(res_result, {})
-        except Exception as e:
-            self.log.error(e)
-            raise e
-    
-    def test_07_get_trash_file(self):
-        self.log.info("\n")
-        self.log.info("07 test get_trash_file".center(80, '-'))
-        test_api = f'/v1/project/{self.project_code}/file/exist'
-        data = {
-            "zone": "vrecore",
-            "file_relative_path": "admin/entity_info_test_4"
-        }
-        try:
-            result = self.app.get(test_api, params=data)
-            self.log.info(result)
-            self.log.info(f"COMPARING CODE: {result.status_code} VS 404")
-            self.assertEqual(result.status_code, 404)
-            res = result.json()
-            self.log.info(res)
-            res_error = res.get('error_msg')
-            self.log.info(f"COMPARING error_msg: {res_error} VS File not found")
-            self.assertEqual(res_error, f'File not found')
-        except Exception as e:
-            self.log.error(e)
-            raise e
+def test_v1_check_file_in_non_existant_zone_return_400(test_client):
+    zone = "fakezone"
+    data = {
+        "zone": zone,
+        "file_relative_path": "admin/entity_info_test_1"
+    }
+    response = test_client.get(f"/v1/project/{project_code}/file/exist", params=data)
+    assert response.status_code == 400
+    res = response.json()
+    assert res["error_msg"] == 'Invalid zone'
+    assert res["result"] == {}
+
+
+def test_v1_check_file_with_invalid_payload_return_500(test_client, httpx_mock):
+    zone = "core"
+    data = {
+        "zone": zone,
+        "file_relative_path": "admin/entity_info_test_1",
+        "added": "test"
+    }
+
+    result = test_client.get(f"/v1/project/{project_code}/file/exist", params=data)
+    assert result.status_code == 500

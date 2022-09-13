@@ -1,3 +1,23 @@
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
 from fastapi import APIRouter
 from fastapi_utils.cbv import cbv
 from fastapi_sqlalchemy import db
@@ -5,8 +25,9 @@ from models import workbench
 from models.workbench_sql import WorkbenchModel
 from models.base_models import APIResponse, EAPIResponseCode
 from datetime import datetime
-import requests
+import httpx
 from config import ConfigClass
+from sqlalchemy.orm.exc import NoResultFound
 
 router = APIRouter()
 
@@ -14,7 +35,7 @@ router = APIRouter()
 @cbv(router)
 class Workbench:
     @router.get('/{project_geid}/workbench', response_model=workbench.GETWorkbenchResponse, summary="Get workbench entry")
-    async def get(self, project_geid):
+    def get(self, project_geid):
         api_response = APIResponse()
         query_data = {
             "geid": project_geid,
@@ -26,7 +47,7 @@ class Workbench:
             api_response.code = EAPIResponseCode.internal_error
             return api_response.json_response()
 
-        results = {} 
+        results = {}
         for obj in workbench_objects:
             results[obj.workbench_resource] = {
                 "deployed": obj.deployed,
@@ -39,7 +60,7 @@ class Workbench:
         return api_response.json_response()
 
     @router.post('/{project_geid}/workbench', response_model=workbench.POSTWorkbenchResponse, summary="Create a workbench entry")
-    async def post(self, project_geid, data: workbench.POSTWorkbenchRequest):
+    def post(self, project_geid, data: workbench.POSTWorkbenchRequest):
         api_response = APIResponse()
         if not data.workbench_resource in ["guacamole", "superset", "jupyterhub"]:
             api_response.error_msg = "Invalid workbench resource"
@@ -49,23 +70,21 @@ class Workbench:
         # Duplicate check
         try:
             query = {
-                "workbench_resource": data.workbench_resource, 
-                "geid": project_geid, 
+                "workbench_resource": data.workbench_resource,
+                "geid": project_geid,
             }
             workbench_objects = db.session.query(WorkbenchModel).filter_by(**query)
             if workbench_objects.count() > 0:
-                api_response.error_msg = "Record already exists for this project and resource"
-                api_response.code = EAPIResponseCode.conflict
-                return api_response.json_response()
+                raise Exception("Record already exists for this project and resource")
         except Exception as e:
             api_response.error_msg = "Error querying psql: " + str(e)
             api_response.code = EAPIResponseCode.internal_error
             return api_response.json_response()
-
-        response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Container/query", json={"global_entity_id": project_geid})
+        with httpx.Client() as client:
+            response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/Container/query", json={"global_entity_id": project_geid})
         if response.status_code != 200:
             api_response.error_msg = response.json()
-            api_response.code = response.status_code
+            api_response.code = EAPIResponseCode(response.status_code)
             return api_response.json_response()
         dataset_node = response.json()[0]
 
@@ -96,11 +115,11 @@ class Workbench:
         return api_response.json_response()
 
     @router.delete('/{project_geid}/workbench/{id}', response_model=workbench.POSTWorkbenchResponse, summary="Delete a workbench entry")
-    async def delete(self, project_geid, id):
+    def delete(self, project_geid, id):
         api_response = APIResponse()
         query = {
-            "geid": project_geid, 
-            "id": id, 
+            "geid": project_geid,
+            "id": id,
         }
         workbench_object = db.session.query(WorkbenchModel).filter_by(**query).first()
         if not workbench_object:

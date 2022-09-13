@@ -1,108 +1,91 @@
-import os
-import requests
-from requests.models import HTTPError
-from pydantic import BaseSettings, Extra
-from typing import Dict, Set, List, Any
-from functools import lru_cache
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
 
-SRV_NAMESPACE = os.environ.get("APP_NAME", "service_entityinfo")
-CONFIG_CENTER_ENABLED = os.environ.get("CONFIG_CENTER_ENABLED", "false")
-CONFIG_CENTER_BASE_URL = os.environ.get("CONFIG_CENTER_BASE_URL", "NOT_SET")
+from functools import lru_cache
+from typing import Any
+from typing import Dict
+
+from common import VaultClient
+from pydantic import BaseSettings
+from pydantic import Extra
+from starlette.config import Config
+
+config = Config('.env')
+SRV_NAMESPACE = config('APP_NAME', cast=str, default='service_metadata')
+CONFIG_CENTER_ENABLED = config('CONFIG_CENTER_ENABLED', cast=str, default='false')
+
 
 def load_vault_settings(settings: BaseSettings) -> Dict[str, Any]:
-    if CONFIG_CENTER_ENABLED == "false":
+    if CONFIG_CENTER_ENABLED == 'false':
         return {}
     else:
-        return vault_factory(CONFIG_CENTER_BASE_URL)
-
-def vault_factory(config_center) -> dict:
-    url = f"{config_center}/v1/utility/config/{SRV_NAMESPACE}"
-    config_center_respon = requests.get(url)
-    if config_center_respon.status_code != 200:
-        raise HTTPError(config_center_respon.text)
-    return config_center_respon.json()['result']
+        vc = VaultClient(config('VAULT_URL'), config('VAULT_CRT'), config('VAULT_TOKEN'))
+        return vc.get_from_vault(SRV_NAMESPACE)
 
 
 class Settings(BaseSettings):
-    port: int = 5066
-    host: str = "127.0.0.1"
-    env: str = "test"
-    namespace: str = ""
-    
-    # disk mounts
-    NFS_ROOT_PATH: str = "/data/vre-storage"
-    VRE_ROOT_PATH: str = "/vre-data"
-    ROOT_PATH: str = {
-        "vre": "/vre-data"
-    }.get(os.environ.get('namespace'), "/data/vre-storage")
+    """Store service configuration settings."""
+
+    APP_NAME: str = 'service_metadata'
+    PORT: int = 5066
+    HOST: str = '127.0.0.1'
+    env: str = ''
+    namespace: str = SRV_NAMESPACE
 
     NEO4J_SERVICE: str
     ENTITYINFO_SERVICE: str
     PROVENANCE_SERVICE: str
     UTILITY_SERVICE: str
-    BFF_SERVICE: str
     DATA_OPS_UTIL: str
     CATALOGUING_SERVICE: str
 
-    RDS_HOST: str
-    RDS_PORT: str
-    RDS_DBNAME: str
-    RDS_USER: str
-    RDS_PWD: str
+    RDS_DB_URI: str
     RDS_SCHEMA_DEFAULT: str
 
-    
+    OPEN_TELEMETRY_ENABLED: bool = False
+    OPEN_TELEMETRY_HOST: str = '127.0.0.1'
+    OPEN_TELEMETRY_PORT: int = 6831
+
+    def __init__(self):
+        super().__init__()
+        self.NEO4J_SERVICE_V1 = self.NEO4J_SERVICE + '/v1/neo4j/'
+        self.NEO4J_SERVICE_V2 = self.NEO4J_SERVICE + '/v2/neo4j/'
+        self.PROVENANCE_SERVICE_V1 = self.PROVENANCE_SERVICE + '/v1/'
+        self.UTILITY_SERVICE_V1 = self.UTILITY_SERVICE + '/v1/'
+        self.DATAOPS = self.DATA_OPS_UTIL
+        self.CATALOGUING = self.CATALOGUING_SERVICE
+
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'
         extra = Extra.allow
 
         @classmethod
-        def customise_sources(
-            cls,
-            init_settings,
-            env_settings,
-            file_secret_settings,
-        ):
-            return (
-                load_vault_settings,
-                env_settings,
-                init_settings,
-                file_secret_settings,
-            )
-    
+        def customise_sources(cls, init_settings, env_settings, file_secret_settings):
+            return env_settings, load_vault_settings, init_settings, file_secret_settings
+
 
 @lru_cache(1)
 def get_settings():
-    settings =  Settings()
+    settings = Settings()
     return settings
 
-class ConfigClass(object):
-    settings = get_settings()
 
-    version = "0.1.0"
-    env = settings.env
-    disk_namespace = settings.namespace
-    
-    # disk mounts
-    NFS_ROOT_PATH = settings.NFS_ROOT_PATH
-    VRE_ROOT_PATH = settings.VRE_ROOT_PATH
-    ROOT_PATH = settings.ROOT_PATH
-
-    NEO4J_SERVICE = settings.NEO4J_SERVICE + "/v1/neo4j/"
-    ENTITYINFO_SERVICE = settings.ENTITYINFO_SERVICE + "/v1/"
-    NEO4J_SERVICE_V2 = settings.NEO4J_SERVICE + "/v2/neo4j/"
-    PROVENANCE_SERVICE = settings.PROVENANCE_SERVICE + "/v1/"
-    UTILITY_SERVICE = settings.UTILITY_SERVICE + "/v1/"
-    BFF_SERVICE = settings.BFF_SERVICE + "/v1/"
-    DATAOPS = settings.DATA_OPS_UTIL
-    CATALOGUING = settings.CATALOGUING_SERVICE
-
-    RDS_HOST = settings.RDS_HOST
-    RDS_PORT = settings.RDS_PORT
-    RDS_DBNAME = settings.RDS_DBNAME
-    RDS_USER = settings.RDS_USER
-    RDS_PWD = settings.RDS_PWD
-    RDS_SCHEMA_DEFAULT = settings.RDS_SCHEMA_DEFAULT
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{RDS_USER}:{RDS_PWD}@{RDS_HOST}/{RDS_DBNAME}"
-
+ConfigClass = get_settings()

@@ -1,9 +1,31 @@
-import requests
-from config import ConfigClass
-from models.manifest_sql import DataManifestModel , DataAttributeModel, TypeEnum
-from fastapi_sqlalchemy import db
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
 import re
 import time
+
+import httpx
+from fastapi_sqlalchemy import db
+
+from config import ConfigClass
+from models.manifest_sql import DataAttributeModel
 
 
 def get_files_recursive(folder_geid, all_files=[]):
@@ -19,8 +41,8 @@ def get_files_recursive(folder_geid, all_files=[]):
             }
         }
     }
-
-    resp = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=query)
+    with httpx.Client() as client:
+        resp = client.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=query)
     for node in resp.json()["results"]:
         if "File" in node["labels"]:
             all_files.append(node)
@@ -28,6 +50,7 @@ def get_files_recursive(folder_geid, all_files=[]):
             get_files_recursive(node["global_entity_id"], all_files=all_files)
 
     return all_files
+
 
 # TODO remove the label checking by get by geid
 def get_source_label(source_type):
@@ -40,20 +63,20 @@ def get_source_label(source_type):
 
 
 def get_query_labels(zone, source_type):
-    if not zone in ["Greenroom", "VRECore", "All"]:
+    if not zone in ["Greenroom", "Core", "All"]:
         return False
 
     label_list = []
     label = {
         "Greenroom": "Greenroom:",
-        "VRECore": "VRECore:",
+        "Core": "Core:",
         "All": "",
     }.get(zone, "")
     if source_type == "TrashFile":
         if zone == "All":
-            label_list.append("VRECore:TrashFile")
+            label_list.append("Core:TrashFile")
             label_list.append("Greenroom:TrashFile")
-            label_list.append("VRECore:Folder")
+            label_list.append("Core:Folder")
             label_list.append("Greenroom:Folder")
         else:
             label_list.append(label + "TrashFile")
@@ -91,11 +114,11 @@ def convert_query(labels, query, partial, source_type):
                 # the user can ONLY see their own file in greenroom
                 # so we use the display path to do the authorization filter
                 # in neo4j
-                if label != "VRECore:TrashFile":
-                    # add the ending slash for user who has same start(bug VRE-2046)
+                if label != "Core:TrashFile":
+                    # add the ending slash for user who has same start(bug 2046)
                     # eg. username1 vs username11
-                    neo4j_query[label]["display_path"] = value + "/" 
-                    neo4j_query[label]["startswith"] = ["display_path"] 
+                    neo4j_query[label]["display_path"] = value + "/"
+                    neo4j_query[label]["startswith"] = ["display_path"]
         if source_type == "TrashFile" and 'Folder' in label:
             neo4j_query[label]["in_trashbin"] = True
             if neo4j_query[label].get('archived'):
@@ -106,37 +129,52 @@ def convert_query(labels, query, partial, source_type):
 
 def get_file_node_bygeid(geid):
     post_data = {"global_entity_id": geid}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(
+            ConfigClass.NEO4J_SERVICE_V1 + f"nodes/File/query", json=post_data
+        )
     if not response.json():
         return None
     return response.json()[0]
+
 
 def get_folder_node_bygeid(geid):
+    # no call for this function found
     post_data = {"global_entity_id": geid}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Folder/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(
+            ConfigClass.NEO4J_SERVICE_V1 + f"nodes/Folder/query", json=post_data
+        )
     if not response.json():
         return None
     return response.json()[0]
 
+
 def get_trashfile_node_bygeid(geid):
+    # no call for this function found
     post_data = {"global_entity_id": geid}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/TrashFile/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/TrashFile/query", json=post_data)
     if not response.json():
         return None
     return response.json()[0]
+
 
 def get_file_node(full_path):
     post_data = {"full_path": full_path}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/File/query", json=post_data)
     if not response.json():
         return None
     return response.json()[0]
 
+
 def is_greenroom(file_node):
-    if not "Greenroom" in file_node["labels"]:
+    if "Greenroom" not in file_node["labels"]:
         return False
     else:
         return True
+
 
 def has_valid_attributes(manifest_id, data):
     attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest_id).order_by(DataAttributeModel.id.asc())
@@ -161,6 +199,7 @@ def has_valid_attributes(manifest_id, data):
                     return False, "Field required"
     return True, ""
 
+
 def check_attributes(attributes):
     # Apply name restrictions
     name_requirements = re.compile("^[a-zA-z0-9]{1,32}$")
@@ -170,8 +209,8 @@ def check_attributes(attributes):
     return True, ""
 
 
-
 def attach_attributes(manifest, attributes, file_node, _logger):
+    # no call for this function found
     post_data = {
         "manifest_id": manifest['id'],
     }
@@ -205,7 +244,8 @@ def attach_attributes(manifest, attributes, file_node, _logger):
                 "value": value
             })
     file_id = file_node["id"]
-    response = requests.put(ConfigClass.NEO4J_SERVICE + f"nodes/File/node/{file_id}", json=post_data)
+    with httpx.Client() as client:
+        response = client.put(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/File/node/{file_id}", json=post_data)
 
     if response.status_code != 200:
         _logger.error('Update Neo4j Node failed: {}'.format(response.text))
@@ -219,10 +259,25 @@ def attach_attributes(manifest, attributes, file_node, _logger):
             "time_lastmodified": time.time()
         }
     }
-    es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+    with httpx.Client() as client:
+        es_res = client.put(ConfigClass.PROVENANCE_SERVICE_V1 + 'entity/file', json=es_payload)
 
     if es_res.status_code != 200:
         _logger.error('Update Elastic Search Entity failed: {}'.format(es_res.text))
         return False
 
     return True
+
+def get_container_id(query_params):
+    url = ConfigClass.NEO4J_SERVICE_V1 + f"nodes/Container/query"
+    payload = {
+        **query_params
+    }
+    with httpx.Client() as client:
+        result = client.post(url, json=payload)
+
+    if result.status_code != 200 or result.json() == []:
+        return None
+    result = result.json()[0]
+    container_id = result["id"]
+    return container_id

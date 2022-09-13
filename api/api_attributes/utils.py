@@ -1,11 +1,46 @@
-import requests 
-from config import ConfigClass
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
 import time
+
+import httpx
+from logger import LoggerFactory
+
+from config import ConfigClass
+
+logger = LoggerFactory(__name__).get_logger()
 
 
 def get_file_node_bygeid(geid):
     post_data = {"global_entity_id": geid, "archived": False}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(
+            ConfigClass.NEO4J_SERVICE_V1 + f"nodes/File/query",
+            json=post_data
+        )
+    try:
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.error("HTTP Exception", exc_info=True)
+        raise exc
+
     if not response.json():
         return None
     return response.json()[0]
@@ -13,10 +48,21 @@ def get_file_node_bygeid(geid):
 
 def get_folder_node_bygeid(geid):
     post_data = {"global_entity_id": geid, "archived": False}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Folder/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(
+            ConfigClass.NEO4J_SERVICE_V1 + f"nodes/Folder/query",
+            json=post_data
+        )
+    try:
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.error("HTTP Exception", exc_info=True)
+        raise exc
+
     if not response.json():
         return None
     return response.json()[0]
+
 
 def is_valid_file(file_node, project_role, username):
     if file_node['archived'] == True:
@@ -25,13 +71,14 @@ def is_valid_file(file_node, project_role, username):
         if project_role == 'contributor' and file_node['uploader'] != username:
             return False
         elif project_role == 'collaborator':
-            if "VRECore" not in file_node['labels'] and file_node['uploader'] != username:
+            if "Core" not in file_node['labels'] and file_node['uploader'] != username:
                 return False
             return True
         else:
             return True
     else:
         return True
+
 
 def has_valid_attributes(attributes, received_attributes):
     for attr in attributes:
@@ -90,8 +137,16 @@ def attach_attributes(manifest, attributes, file_node, _logger):
                 "value": value
             })
     file_id = file_node["id"]
-    response = requests.put(ConfigClass.NEO4J_SERVICE + f"nodes/File/node/{file_id}", json=post_data)
-
+    with httpx.Client() as client:
+        response = client.put(
+            ConfigClass.NEO4J_SERVICE_V1 + f"nodes/File/node/{file_id}",
+            json=post_data
+        )
+    try:
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.error("HTTP Exception", exc_info=True)
+        raise exc
     if response.status_code != 200:
         _logger.error('Update Neo4j Node failed: {}'.format(response.text))
         return False
@@ -104,8 +159,16 @@ def attach_attributes(manifest, attributes, file_node, _logger):
             "time_lastmodified": time.time()
         }
     }
-    es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
-
+    with httpx.Client() as client:
+        es_res = client.put(
+            ConfigClass.PROVENANCE_SERVICE_V1 + 'entity/file',
+            json=es_payload
+        )
+    try:
+        es_res.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.error("HTTP Exception", exc_info=True)
+        raise exc
     if es_res.status_code != 200:
         _logger.error('Update Elastic Search Entity failed: {}'.format(es_res.text))
         return False
@@ -114,7 +177,7 @@ def attach_attributes(manifest, attributes, file_node, _logger):
 
 
 def get_files_recursive(folder_geid, all_files=[]):
-    query = {
+    payload = {
         "start_label": "Folder",
         "end_labels": ["File", "Folder"],
         "query": {
@@ -131,8 +194,16 @@ def get_files_recursive(folder_geid, all_files=[]):
             }
         }
     }
-
-    resp = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=query)
+    with httpx.Client() as client:
+        resp = client.post(
+            ConfigClass.NEO4J_SERVICE_V2 + "relations/query",
+            json=payload
+        )
+    try:
+        resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.error("HTTP Exception", exc_info=True)
+        raise exc
     for node in resp.json()["results"]:
         if "File" in node["labels"]:
             all_files.append(node)
