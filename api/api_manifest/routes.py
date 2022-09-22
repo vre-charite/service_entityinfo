@@ -1,49 +1,61 @@
-from fastapi import APIRouter, Depends
-from fastapi_utils.cbv import cbv
-from fastapi_sqlalchemy import db
-from models import manifest
-from models.manifest_sql import DataManifestModel , DataAttributeModel
-from models.base_models import APIResponse, EAPIResponseCode
-from datetime import datetime
-import requests
-from config import ConfigClass
-from .utils import is_greenroom, get_file_node_bygeid, get_trashfile_node_bygeid, \
-        has_valid_attributes, check_attributes, get_folder_node_bygeid
-from commons.service_logger.logger_factory_service import SrvLoggerFactory
-import time
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
 import re
 
-router = APIRouter()
-_logger = SrvLoggerFactory("api_manifest").get_logger()
+import httpx
+from fastapi import APIRouter
+from fastapi_sqlalchemy import db
+from fastapi_utils.cbv import cbv
+from logger import LoggerFactory
+
+from config import ConfigClass
+from models import manifest
+from models.base_models import APIResponse
+from models.base_models import EAPIResponseCode
+from models.manifest_sql import DataAttributeModel
+from models.manifest_sql import DataManifestModel
+from .service import Manifest
+from .utils import check_attributes
+from .utils import get_file_node_bygeid
+from .utils import get_trashfile_node_bygeid
+
+manifest_router = APIRouter()
+_logger = LoggerFactory('api_manifest').get_logger()
 
 
-@cbv(router)
+@cbv(manifest_router)
 class RestfulManifests:
-    @router.get('/manifests', response_model=manifest.GETManifestsResponse, summary="List manifests by project_code")
-    async def get(self, project_code: str):
+    @manifest_router.get('/manifests', response_model=manifest.GETManifestsResponse, summary="List manifests by project_code")
+    def get(self, project_code: str):
         """
         List manifests by project_code
         """
         my_res = APIResponse()
-        manifests = db.session.query(DataManifestModel).filter_by(project_code=project_code)
-        results = []
-        for manifest in manifests:
-        #for manifest in manifests.items:
-            result = manifest.to_dict()
-            result["attributes"] = []
-            attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id).\
-                    order_by(DataAttributeModel.id.asc())
-            for atr in attributes:
-                result["attributes"].append(atr.to_dict())
-            results.append(result)
-        #my_res.set_page(manifests.page)
-        #my_res.set_num_of_pages(manifests.pages)
+        results = Manifest.get_by_project_name(project_code)
         my_res.total = len(results)
         my_res.result = results
         return my_res.json_response()
 
-    @router.post('/manifests', response_model=manifest.POSTManifestsResponse, summary="Create a data manifest")
-    async def post(self, data: manifest.POSTManifestsRequest):
+    @manifest_router.post('/manifests', response_model=manifest.POSTManifestsResponse, summary="Create a data manifest")
+    def post(self, data: manifest.POSTManifestsRequest):
         api_response = APIResponse()
 
         manifests = db.session.query(DataManifestModel).filter_by(project_code=data.project_code)
@@ -72,30 +84,25 @@ class RestfulManifests:
         api_response.result = manifest.to_dict()
         return api_response.json_response()
 
-@cbv(router)
+
+@cbv(manifest_router)
 class RestfulManifest:
-    @router.get('/manifest/{manifest_id}', response_model=manifest.GETManifestResponse, summary="Get a single manifest")
-    async def get(self, manifest_id):
+    @manifest_router.get('/manifest/{manifest_id}', response_model=manifest.GETManifestResponse, summary="Get a single manifest")
+    def get(self, manifest_id):
         """
         Get a data manifest and list attributes
         """
         my_res = APIResponse()
-        manifest = db.session.query(DataManifestModel).get(manifest_id)
+        manifest = Manifest.get_by_id(manifest_id)
         if not manifest:
             my_res.code = EAPIResponseCode.not_found
             my_res.error_msg = 'Manifest not found'
             _logger.error(my_res.error_msg)
         else:
-            result = manifest.to_dict()
-            result["attributes"] = []
-            attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest_id).\
-                    order_by(DataAttributeModel.id.asc())
-            for atr in attributes:
-                result["attributes"].append(atr.to_dict())
-            my_res.result = result
+            my_res.result = manifest
         return my_res.json_response()
 
-    @router.put('/manifest/{manifest_id}', response_model=manifest.PUTManifestResponse, summary="update a single manifest")
+    @manifest_router.put('/manifest/{manifest_id}', response_model=manifest.PUTManifestResponse, summary="update a single manifest")
     def put(self, manifest_id, data: manifest.PUTManifestRequest):
         my_res = APIResponse()
         manifest = db.session.query(DataManifestModel).get(manifest_id)
@@ -105,14 +112,6 @@ class RestfulManifest:
             _logger.error(my_res.error_msg)
             return my_res.json_response()
 
-        if hasattr(data, "type"):
-            try:
-                manifest.type = getattr(manifest.TypeEnum, data.type)
-            except AttributeError:
-                my_res.code = EAPIResponseCode.bad_request
-                my_res.result = "Invalid type"
-                _logger.error(my_res.result)
-                return my_res.json_response()
         update_fields = ["name", "project_code"]
         for field in update_fields:
             if hasattr(data, field):
@@ -123,7 +122,7 @@ class RestfulManifest:
         my_res.result = manifest.to_dict()
         return my_res.json_response()
 
-    @router.delete('/manifest/{manifest_id}', response_model=manifest.DELETEManifestResponse, summary="delete a single manifest")
+    @manifest_router.delete('/manifest/{manifest_id}', response_model=manifest.DELETEManifestResponse, summary="delete a single manifest")
     def delete(self, manifest_id):
         my_res = APIResponse()
         manifest = db.session.query(DataManifestModel).get(manifest_id)
@@ -134,7 +133,10 @@ class RestfulManifest:
             return my_res.json_response()
 
         # check if connect to any files
-        response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/File/query/count", json={"manifest_id": int(manifest_id)})
+        with httpx.Client() as client:
+            response = client.post(
+                ConfigClass.NEO4J_SERVICE_V1 + "nodes/File/query/count", json={"manifest_id": int(manifest_id)}
+            )
         if response.json()["count"] > 0:
             my_res.code = EAPIResponseCode.forbidden
             my_res.result = "Can't delete manifest attached to files"
@@ -151,9 +153,9 @@ class RestfulManifest:
         return my_res.json_response()
 
 
-@cbv(router)
+@cbv(manifest_router)
 class ImportManifest:
-    @router.post('/manifest/file/import', response_model=manifest.POSTImportResponse, summary="Import a data manifest")
+    @manifest_router.post('/manifest/file/import', response_model=manifest.POSTImportResponse, summary="Import a data manifest")
     def post(self, data: manifest.POSTImportRequest):
         api_response = APIResponse()
         # limit check
@@ -216,8 +218,8 @@ class ImportManifest:
         # required attrbiute check
         for attribute in attributes:
             attr_data = {
-                "manifest_id": manifest.id, 
-                "project_code": data.project_code, 
+                "manifest_id": manifest.id,
+                "project_code": data.project_code,
             }
             for field in required_fields:
                 if not field in attribute:
@@ -228,7 +230,10 @@ class ImportManifest:
                 attr_data[field] = attribute[field]
             # check if connect to any files
             if not attr_data["optional"]:
-                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/File/query/count", json={"manifest_id": manifest.id})
+                with httpx.Client() as client:
+                    response = client.post(
+                        ConfigClass.NEO4J_SERVICE_V1 + "nodes/File/query/count", json={"manifest_id": manifest.id}
+                    )
                 if response.json()["count"] > 0:
                     api_response.code = EAPIResponseCode.forbidden
                     api_response.result = "Can't add required attributes to manifest attached to files"
@@ -246,17 +251,17 @@ class ImportManifest:
         return api_response.json_response()
 
 
-@cbv(router)
+@cbv(manifest_router)
 class ExportManifest:
-    @router.get('/manifest/file/export', summary="Export a data manifest")
+    @manifest_router.get('/manifest/file/export', summary="Export a data manifest")
     def get(self, manifest_id: int):
         api_response = APIResponse()
         response_data = {
             "attributes": []
         }
         manifest = db.session.query(DataManifestModel).get(manifest_id)
-        attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id).\
-                order_by(DataAttributeModel.id.asc())
+        attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id). \
+            order_by(DataAttributeModel.id.asc())
         for attribute in attributes:
             response_data["attributes"].append({
                 "name": attribute.name,
@@ -269,15 +274,15 @@ class ExportManifest:
         return response_data
 
 
-@cbv(router)
+@cbv(manifest_router)
 class FileManifestQuery:
-    @router.post('/manifest/query', response_model=manifest.POSTQueryResponse, summary="Query file manifests")
+    @manifest_router.post('/manifest/query', response_model=manifest.POSTQueryResponse, summary="Query file manifests")
     def post(self, data: manifest.POSTQueryRequest):
         api_response = APIResponse()
         geid_list = data.geid_list
         lineage_view = data.lineage_view
 
-        results = {} 
+        results = {}
         for geid in geid_list:
             file_node = get_file_node_bygeid(geid)
             if not file_node:
@@ -298,8 +303,8 @@ class FileManifestQuery:
                         "optional": sql_attribute.optional,
                         "manifest_id": manifest_id,
                     })
-                results[geid] = attributes 
+                results[geid] = attributes
             else:
-                results[geid] = {} 
+                results[geid] = {}
         api_response.result = results
         return api_response.json_response()

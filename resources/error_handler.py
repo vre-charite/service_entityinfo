@@ -1,21 +1,45 @@
-import enum
-from models.base_models import APIResponse, EAPIResponseCode
-from functools import wraps
-from requests import Response
-from commons.service_logger.logger_factory_service import SrvLoggerFactory
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
 
-_logger = SrvLoggerFactory('internal_error').get_logger()
+import enum
+from functools import wraps
+
+from httpx import Response
+from logger import LoggerFactory
+
+from models.base_models import APIResponse
+from models.base_models import EAPIResponseCode
+
+_logger = LoggerFactory('internal_error').get_logger()
 
 
 def catch_internal(api_namespace):
     '''
     decorator to catch internal server error.
     '''
+
     def decorator(func):
         @wraps(func)
-        async def inner(*args, **kwargs):
+        def inner(*args, **kwargs):
             try:
-                return await func(*args, **kwargs)
+                return func(*args, **kwargs)
             except Exception as exce:
                 respon = APIResponse()
                 respon.code = EAPIResponseCode.internal_error
@@ -26,7 +50,9 @@ def catch_internal(api_namespace):
                 _logger.error(err_msg)
                 respon.error_msg = err_msg
                 return respon.json_response()
+
         return inner
+
     return decorator
 
 

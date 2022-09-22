@@ -1,31 +1,57 @@
-import requests
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
 
+import httpx
+from fastapi import APIRouter
 from fastapi_sqlalchemy import db
 from fastapi_utils.cbv import cbv
-from fastapi import APIRouter
-from commons.service_logger.logger_factory_service import SrvLoggerFactory
+from logger import LoggerFactory
+
+from api.api_manifest.service import Manifest
 from config import ConfigClass
 from models import attributes as models
 from models import manifest
-from models.base_models import APIResponse, EAPIResponseCode
+from models.base_models import APIResponse
+from models.base_models import EAPIResponseCode
 from models.manifest_sql import DataAttributeModel
 from resources.error_handler import catch_internal
-from .utils import get_files_recursive, get_file_node_bygeid, get_folder_node_bygeid, attach_attributes, \
-    has_valid_attributes
+
+from .utils import attach_attributes
+from .utils import get_file_node_bygeid
+from .utils import get_files_recursive
+from .utils import get_folder_node_bygeid
+from .utils import has_valid_attributes
 
 router = APIRouter()
 _API_NAMESPACE = "file_attributes_restful"
-_logger = SrvLoggerFactory("file_attributes").get_logger()
+_logger = LoggerFactory(__name__).get_logger()
 
 
 @cbv(router)
 class AttachAttributes:
     def __init__(self):
-        self._logger = SrvLoggerFactory('api_attributes').get_logger()
+        self._logger = LoggerFactory('api_attributes').get_logger()
 
     @router.post('/files/attributes/attach', summary="Attach attributes on file", tags=['files'])
     @catch_internal(_API_NAMESPACE)
-    async def post(self, data: models.AttachAttributesPOST):
+    def post(self, data: models.AttachAttributesPOST):
         api_response = models.AttachPOSTResponse()
         self._logger.info(f"file data payload: {data}")
 
@@ -33,21 +59,16 @@ class AttachAttributes:
         global_entity_id = data.global_entity_id
         attributes = data.attributes
 
-        res = requests.get(ConfigClass.ENTITYINFO_SERVICE + f"manifest/{manifest_id}")
-        manifest = None
-        if res.status_code == 200:
-            manifest_data = res.json()
-            manifest = manifest_data['result']
-            self._logger.info(f"file manifest: {manifest}")
-        else:
+        manifest = Manifest.get_by_id(manifest_id)
+        if not manifest:
             api_response.code = EAPIResponseCode.bad_request
             api_response.error_msg = "can not get manifest data with manifest_id: {}".format(
                 manifest_id)
-            self._logger.error(f"file manifest error: {res.text}")
+            self._logger.error("file manifest not found")
             return api_response.json_response()
+        self._logger.info(f"file manifest: {manifest}")
 
         sql_attributes = manifest['attributes']
-
         result_list = []
 
         valid, error_msg = has_valid_attributes(sql_attributes, attributes)
@@ -128,7 +149,7 @@ class AttachAttributes:
 @cbv(router)
 class RestfulAttributes:
     @router.post('/attributes', response_model=manifest.POSTAttributesResponse, summary="Bulk create attributes", tags=['attributes'])
-    async def post(self, data: manifest.POSTAttributesRequest):
+    def post(self, data: manifest.POSTAttributesRequest):
         api_response = APIResponse()
         attributes = data.attributes
         for item in attributes:
@@ -144,7 +165,16 @@ class RestfulAttributes:
 
             # check if connect to any files
             if not model_data["optional"]:
-                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/File/query/count", json={"manifest_id": model_data["manifest_id"]})
+                with httpx.Client() as client:
+                    response = client.post(
+                        ConfigClass.NEO4J_SERVICE_V1 + "nodes/File/query/count",
+                        json={"manifest_id": model_data["manifest_id"]}
+                    )
+                try:
+                    response.raise_for_status()
+                except httpx.HTTPError as exc:
+                    _logger.error("HTTP Exception", exc_info=True)
+                    raise exc
                 if response.json()["count"] > 0:
                     api_response.code = EAPIResponseCode.forbidden
                     api_response.result = "Can't add required attributes to manifest attached to files"
@@ -161,7 +191,7 @@ class RestfulAttributes:
 @cbv(router)
 class RestfulAttribute:
     @router.put('/attribute/{attribute_id}', response_model=manifest.POSTAttributesResponse, summary="Update an attribute", tags=['attributes'])
-    async def put(self, attribute_id, data: manifest.PUTAttributeRequest):
+    def put(self, attribute_id, data: manifest.PUTAttributeRequest):
         my_res = APIResponse()
         attribute = db.session.query(DataAttributeModel).get(attribute_id)
         if not attribute:
@@ -205,4 +235,3 @@ class RestfulAttribute:
         db.session.commit()
         my_res.result = "Success"
         return my_res.json_response()
-

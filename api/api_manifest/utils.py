@@ -1,36 +1,65 @@
-import requests 
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
+import httpx
 from config import ConfigClass
 from models.manifest_sql import DataManifestModel , DataAttributeModel, TypeEnum
 from fastapi_sqlalchemy import db
 import re
 
+
 def get_file_node_bygeid(geid):
     post_data = {"global_entity_id": geid}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/File/query", json=post_data)
     if not response.json():
         return None
-    return response.json()[0] 
+    return response.json()[0]
+
 
 def get_folder_node_bygeid(geid):
+    # imported but not used
     post_data = {"global_entity_id": geid}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/Folder/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/Folder/query", json=post_data)
     if not response.json():
         return None
-    return response.json()[0] 
+    return response.json()[0]
+
 
 def get_trashfile_node_bygeid(geid):
     post_data = {"global_entity_id": geid}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/TrashFile/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/TrashFile/query", json=post_data)
     if not response.json():
         return None
-    return response.json()[0] 
+    return response.json()[0]
+
 
 def get_file_node(full_path):
     post_data = {"full_path": full_path}
-    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
+    with httpx.Client() as client:
+        response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/File/query", json=post_data)
     if not response.json():
         return None
-    return response.json()[0] 
+    return response.json()[0]
 
 def is_greenroom(file_node):
     if not "Greenroom" in file_node["labels"]:

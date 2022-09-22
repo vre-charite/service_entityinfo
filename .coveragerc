@@ -1,0 +1,4 @@
+[run]
+omit =
+        api/*utils*
+        api/*files_v2*

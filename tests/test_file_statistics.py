@@ -18,23 +18,19 @@
 # permissions and limitations under the Licence.
 # 
 
-FROM python:3.7-buster
+def test_v1_get_file_daily_statistics_return_200(test_client, httpx_mock, mocker):
+    project_geid = "abc123"
+    # query node
+    httpx_mock.add_response(
+        method='POST',
+        url="http://neo4j_service/v1/neo4j/nodes/Container/query",
+        status_code=200,
+        json=[{"code":200}]
+    )
 
-ARG PIP_USERNAME
-ARG PIP_PASSWORD
+    mocker.patch('api.api_files.files_stats.get_operation_logs_total', return_value=[1, 2, 3, 4])
+    mocker.patch('api.api_files.files_stats.get_file_count_neo4j', return_value=[1, 2, 3])
 
-WORKDIR /usr/src/app
-
-ENV TZ=America/Toronto
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && apt-get update && \
-apt-get install -y vim-tiny less && ln -s /usr/bin/vim.tiny /usr/bin/vim && rm -rf /var/lib/apt/lists/*
-COPY . .
-
-RUN pip install --no-cache-dir poetry==1.1.12
-RUN poetry config virtualenvs.create false && poetry config http-basic.pilot ${PIP_USERNAME} ${PIP_PASSWORD}
-RUN poetry install --no-dev --no-root --no-interaction
-
-RUN chmod +x gunicorn_starter.sh
-
-CMD ["./gunicorn_starter.sh"]
+    response = test_client.get(
+        f"/v1/project/{project_geid}/files/statistics?project_code=0401&start_date=1618200000&end_date=1618286399")
+    assert response.status_code == 200

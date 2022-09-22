@@ -1,0 +1,61 @@
+// Copyright 2022 Indoc Research
+// 
+// Licensed under the EUPL, Version 1.2 or – as soon they
+// will be approved by the European Commission - subsequent
+// versions of the EUPL (the "Licence");
+// You may not use this work except in compliance with the
+// Licence.
+// You may obtain a copy of the Licence at:
+// 
+// https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+// 
+// Unless required by applicable law or agreed to in
+// writing, software distributed under the Licence is
+// distributed on an "AS IS" basis,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// express or implied.
+// See the Licence for the specific language governing
+// permissions and limitations under the Licence.
+// 
+
+version: '3'
+services:
+  web:
+    image: 'web'
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "git.indocresearch.org:10.4.3.151"
+    environment:
+      - env="dev"
+      - PIP_USERNAME
+      - PIP_PASSWORD
+      - port=8000
+      - CONFIG_CENTER_ENABLED=false
+      - NEO4J_SERVICE=http://NEO4J_SERVICE
+      - NEO4J_SERVICE_V1=http://NEO4J_SERVICE_V1
+      - PROVENANCE_SERVICE=http://AUDIT_TRAIL_SERVICE
+      - ENTITYINFO_SERVICE=http://ENTITYINFO_SERVICE
+      - UTILITY_SERVICE=http://UTILITY_SERVICE
+      - DATA_OPS_UTIL=http://DATA_OPS_UTIL
+      - CATALOGUING_SERVICE=http://CATALOGUING_SERVICE
+      - RDS_DB_URI=postgresql://postgres:postgres@db:15432/postgres
+      - RDS_SCHEMA_DEFAULT=test_schema
+    volumes:
+    - .:/usr/src/app
+    depends_on:
+      - db
+    command:
+      sh -c "
+        uvicorn app:app --reload --host 0.0.0.0"
+
+  db:
+    image: 'postgres:12-alpine'
+    ports:
+      - 15432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./postgres-data:/var/lib/postgresql

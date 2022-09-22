@@ -1,1 +1,0 @@
-namespace = "service_entityinfo"

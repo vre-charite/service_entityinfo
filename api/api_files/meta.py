@@ -1,6 +1,26 @@
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
 import math
 import json
-import requests
+import httpx
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
 from models.meta import MetaGET, MetaGETResponse, get_parent_connections, GETFileDetail, POSTFileDetail, \
@@ -15,15 +35,16 @@ router = APIRouter()
 @cbv(router)
 class FileBulkDetail:
     @router.post('/bulk/detail', response_model=POSTFileDetailResponse, summary="Get files by geid")
-    async def post(self, data: POSTFileDetail):
+    def post(self, data: POSTFileDetail):
         api_response = APIResponse()
         if not data.geids:
             api_response.code = EAPIResponseCode.bad_request
             api_response.error_msg = "geids is required"
             return api_response.json_response()
-
+        with httpx.Client() as client:
+            response = client.post(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/query/geids", json={"geids": data.geids})
         try:
-            response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/query/geids", json={"geids": data.geids})
+            response.raise_for_status()
         except Exception as e:
             api_response.code = EAPIResponseCode.internal_error
             api_response.error_msg = "Neo4j error: " + str(e)
@@ -35,10 +56,12 @@ class FileBulkDetail:
 @cbv(router)
 class FileDetail:
     @router.get('/detail/{file_geid}', response_model=GETFileDetail, summary="Get detail of single file by geid")
-    async def get(self, file_geid):
+    def get(self, file_geid):
         api_response = APIResponse()
+        with httpx.Client() as client:
+            response = client.get(ConfigClass.NEO4J_SERVICE_V1 + f"nodes/geid/{file_geid}")
         try:
-            response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/geid/{file_geid}")
+            response.raise_for_status()
         except Exception as e:
             api_response.code = EAPIResponseCode.internal_error
             api_response.error_msg = "Neo4j error: " + str(e)
@@ -55,7 +78,7 @@ class FileDetail:
 @cbv(router)
 class FileMeta:
     @router.get('/meta/{geid}', response_model=MetaGETResponse, summary="Query on files by dataset or folder")
-    async def get(self, geid, params: MetaGET = Depends(MetaGET)):
+    def get(self, geid, params: MetaGET = Depends(MetaGET)):
         """
             Get and filter file meta from Neo4j given a Dataset or Folder geid
         """
@@ -110,7 +133,9 @@ class FileMeta:
             },
         }
         try:
-            response = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=relation_payload)
+            with httpx.Client() as client:
+                response = client.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=relation_payload)
+            response.raise_for_status()
             if response.status_code != 200:
                 error_msg = response.json()
                 api_response.code = EAPIResponseCode.internal_error
